@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="system">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>UOOC Study · 学习工作台</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="#"><span class="brand-mark" aria-hidden="true">u</span><span>UOOC <strong>Study</strong></span></a>
+    <span class="local-label"><i></i>本机工作台</span>
+    <div class="header-tools"><label class="theme-label" for="theme">外观</label><select id="theme" aria-label="外观主题"><option value="system">跟随系统</option><option value="light">浅色</option><option value="dark">深色</option></select><button id="shutdown" class="quiet">退出程序</button></div>
+  </header>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-title">工作空间</div>
+      <nav aria-label="主要导航">
+        <button class="nav-item active" data-view="work" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6a3 3 0 0 1 3 3v14a4 4 0 0 0-4-2H4zm16 0h-4a3 3 0 0 0-3 3v14a4 4 0 0 1 4-2h3z"/></svg>课程与任务</button>
+        <button class="nav-item" data-view="ai"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z"/></svg>答题设置</button>
+        <button class="nav-item" data-view="web"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v13H9l-5 4zM8 8h8m-8 4h5"/></svg>网页协作<span id="web-badge" class="badge" hidden>待答</span></button>
+        <button class="nav-item" data-view="logs"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18H6zm3 5h6m-6 4h6m-6 4h4"/></svg>运行记录</button>
+      </nav>
+      <div class="sidebar-bottom"><span class="status-dot" id="connection-dot"></span><span id="connection-label">尚未连接 UOOC</span><p>UOOC 简单验证自动尝试一次；挑战或失败时请在浏览器处理。</p></div>
+    </aside>
+    <main>
+      <div id="notice" class="notice" role="status" hidden></div>
+      <div id="ai-login-alert" class="login-callout" role="status" hidden><strong id="ai-login-alert-title">请先在官网登录</strong><p id="ai-login-alert-text"></p></div>
+      <section id="view-work" class="view">
+        <div class="page-heading"><div><h1>课程与任务</h1><p>连接账号，选择课程，按自己的节奏推进。</p></div><span id="phase" class="phase">尚未连接</span></div>
+        <section class="account-panel" aria-labelledby="account-title">
+          <div class="panel-caption"><h2 id="account-title">UOOC 账号</h2><span>本次会话使用</span></div>
+          <form id="account-form" class="account-form">
+            <label>手机号 / 邮箱<input id="username" name="username" autocomplete="username" placeholder="输入 UOOC 账号"></label>
+            <label>密码<input id="password" name="password" type="password" autocomplete="current-password" placeholder="输入密码"></label>
+            <label class="browser-field">学习浏览器<select id="browser"><option value="auto">自动选择</option><option value="chrome">Chrome</option><option value="msedge">Edge</option><option value="chromium">Chromium</option></select></label>
+            <button id="connect" class="primary" type="submit">连接并加载课程</button>
+          </form>
+          <div class="account-foot"><span>已登录时会复用会话；也可以在弹出的浏览器中填写账号。</span><button id="logout" class="text-button" disabled>退出账号</button></div>
+        </section>
+        <div class="workspace-grid">
+          <section class="course-panel" aria-labelledby="course-title">
+            <div class="section-heading"><div><h2 id="course-title">选择课程</h2><span id="course-count">连接后显示课程列表</span></div><label class="select-all"><input type="checkbox" id="select-all" disabled>全选</label></div>
+            <div id="courses" class="course-list"><div class="empty"><div class="empty-book" aria-hidden="true">▤</div><h3>从连接账号开始</h3><p>完成浏览器中的登录与验证后，<br>你的课程会显示在这里。</p></div></div>
+            <div class="run-toolbar"><label>运行模式<select id="mode"><option value="video">优先视频，受阻时处理测验</option><option value="inspect">仅查看目录与任务状态</option><option value="quiz-one">试跑首份独立测验</option><option value="quiz">处理独立测验</option></select></label><button id="run" class="primary" disabled>开始运行<span id="selected-count"></span></button></div>
+          </section>
+          <aside class="task-panel" aria-labelledby="task-title">
+            <div class="section-heading"><h2 id="task-title">当前任务</h2><span class="live-dot" id="live-dot"></span></div>
+            <div class="task-content"><span id="current-course" class="task-course">等待选择课程</span><h3 id="current-title">准备好后，点击开始</h3><div class="progress-track"><div id="progress-fill"></div></div><div class="progress-meta"><span id="progress-time">—</span><span id="progress-status">待开始</span></div></div>
+            <div class="task-actions"><button id="pause" disabled>暂停</button><button id="stop" class="danger-text" disabled>停止任务</button></div>
+            <p class="task-help">暂停视频立即生效；页面操作会在下一个安全节点暂停。浏览器可以置于后台；若最小化导致页面停止绘制，程序会恢复窗口以继续操作。停止后可重新连接续跑。</p>
+            <div id="verification" class="verification-note" hidden><strong>等待官网验证</strong><p id="verification-text"></p><button id="show-verification">前往验证页面</button></div>
+            <div class="answer-route"><span>独立测验答题方式</span><strong id="provider-label">豆包网页答题</strong><button class="text-button" data-go="ai">修改设置</button></div>
+          </aside>
+        </div>
+        <section class="recent-panel"><div class="section-heading"><h2>最新动态</h2><button class="text-button" data-go="logs">查看全部记录</button></div><div id="recent-log" class="recent-log">运行后会在这里显示当前进度。</div></section>
+      </section>
+      <section id="view-ai" class="view" hidden>
+        <div class="page-heading"><div><h1>答题设置</h1><p>视频弹题沿用逐项尝试；独立测验使用下面的答题方式。</p></div></div>
+        <form id="ai-form" class="settings-panel">
+          <p id="ai-runtime-note" class="form-note" role="status">选择后点击“应用设置”生效。</p>
+          <fieldset class="provider-options"><legend>独立测验答题方式</legend><label><input type="radio" name="provider" value="api"><span><strong>DeepSeek API</strong><small>按需请求整卷答案，校验后自动填写和提交。</small></span></label><label><input type="radio" name="provider" value="web" checked><span><strong>网页答题</strong><small>豆包、千问或 DeepSeek，整卷发送并读取答案。</small></span></label></fieldset>
+          <div id="web-login-notice" class="login-callout" role="status" hidden><strong id="web-login-notice-title"></strong><p>请在程序打开的官网窗口输入账号密码或扫码。登录完成后，程序自动继续答题，无需复制题目或点击继续。</p></div>
+          <div id="api-fields" class="settings-fields" hidden><label>API Key<div class="input-action"><input id="api-key" type="password" autocomplete="off" placeholder="输入 DeepSeek API Key"><button type="button" id="clear-key" class="quiet">清除</button></div><small>仅在独立测验或点击“测试连接”时调用。</small></label><div class="form-two"><label>模型<input id="model" value="deepseek-chat" autocomplete="off"></label><label>接口地址<input id="endpoint" type="url" value="https://api.deepseek.com" autocomplete="off"></label></div></div>
+          <div id="web-fields" class="settings-fields"><div class="form-two"><label>网页平台<select id="web-platform"><option value="doubao">豆包</option><option value="qianwen">千问</option><option value="deepseek">DeepSeek</option></select></label><label>官网会话<select id="web-login"><option value="guest">访客使用</option><option value="login">在官网手动登录</option></select></label></div><label>操作方式<select id="web-automation"><option value="auto">自动发送题目并读取回复</option><option value="manual">复制题目并手动粘贴回复</option></select></label><p id="web-platform-note" class="form-note"></p><div><button type="button" id="web-connect">打开并连接官网</button> <a id="web-official" target="_blank" rel="noopener noreferrer">访问官方网页</a></div><p class="form-note">选择登录后，请在弹出的官网输入账号密码。登录会话保存在本机，访客模式每次连接使用独立会话。设置保存在本次程序会话中。</p></div>
+          <div class="settings-actions"><button type="submit" class="primary" id="save-ai">应用设置</button><button type="button" id="test-api">测试 API 连接</button><span id="api-result" role="status"></span></div>
+          <p id="api-note" class="form-note">连接测试会发送一条简短请求，可能产生少量 API 费用。设置保存在本次程序会话中。</p>
+        </form>
+        <div class="info-panel"><h2>整卷网页答题</h2><p>每次测验开启新会话，将整卷整理成提示词，要求只输出题号与答案。完整回复通过校验后保存为本机临时文件，再按题号填写并继续提交测验。</p><p>登录、验证和首次使用提示由你在官网完成。官网页面变化或回复不完整时，可手动复制粘贴答案或跳过测验。可用性与使用限制以官网为准。</p></div>
+      </section>
+      <section id="view-web" class="view" hidden>
+        <div class="page-heading"><div><h1>网页答题</h1><p>每次测验使用新会话，按题号带回答案。</p></div><a id="web-chat-link" class="button" href="https://www.doubao.com/chat/" target="_blank" rel="noopener noreferrer">打开豆包</a></div>
+        <div class="info-panel" id="web-session"><h2 id="web-phase">等待连接 AI 官网</h2><p id="web-note">选择网页自动方式后，遇到测验会自动打开官网并发送，无需手动复制或点击继续。</p><button id="web-ready" class="primary" disabled>已在官网完成操作，继续</button><p id="web-file" class="form-note"></p></div>
+        <div id="web-empty" class="web-empty"><h2>当前没有待答测验</h2><p>在答题设置中选择“网页答题”，再运行独立测验。<br>读到题目后，这里会显示整卷提示词。</p><button class="primary" data-go="ai">设置答题方式</button></div>
+        <div id="web-work" hidden><div class="web-banner"><span class="status-dot"></span><strong id="web-summary">等待答案</strong><span>完整答案保存为临时文件后，程序会填写并继续提交测验。</span><button id="skip-answer" class="text-button">跳过本次测验</button></div><details id="manual-tools"><summary>手动接管（自动流程异常时使用）</summary><div class="web-columns"><section class="paper-panel"><div class="section-heading"><h2>题目与提示词</h2><button id="copy-prompt">复制整卷</button></div><label class="sr-only" for="prompt">题目与提示词</label><textarea id="prompt" readonly spellcheck="false"></textarea></section><section class="paper-panel"><div class="section-heading"><h2>粘贴 AI 答案</h2><button id="validate-answer">校验答案</button></div><label class="sr-only" for="answer">AI 答案</label><textarea id="answer" placeholder='粘贴完整答案，例如：&#10;1.A&#10;2.AC&#10;3.["填空答案"]' spellcheck="false"></textarea><div id="answer-preview" class="answer-preview" role="status"></div><button id="apply-answer" class="primary">保存答案并继续测验</button></section></div></details></div>
+      </section>
+      <section id="view-logs" class="view" hidden>
+        <div class="page-heading"><div><h1>运行记录</h1><p>网站确认的完成状态、待处理事项与运行过程。</p></div><button id="download-log">导出当前记录</button></div>
+        <div id="results" class="results"></div>
+        <div class="log-panel"><div class="section-heading"><h2>实时日志</h2><label class="select-all"><input type="checkbox" id="follow-log" checked>跟随最新</label></div><div id="log-lines" class="log-lines" role="log" aria-live="off"><p class="muted">运行后显示日志。</p></div></div>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" hidden></div>
+  <dialog id="action-dialog" aria-labelledby="action-dialog-title"><h2 id="action-dialog-title">操作提示</h2><p id="action-dialog-text"></p><form method="dialog"><button class="primary" autofocus>知道了</button></form></dialog>
+</body>
+</html>
