@@ -1,0 +1,20 @@
+name: Windows build
+on: [workflow_dispatch, push, pull_request]
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.14.1'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run check
+      - run: npm run build:windows
+      - run: .\UOOC-Study.exe --check
+      - uses: actions/upload-artifact@v4
+        with:
+          name: UOOC-Study
+          path: dist/*.zip
