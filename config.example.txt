@@ -1,0 +1,20 @@
+# 留空的账号字段会在需要登录时提示输入
+USERNAME=
+PASSWORD=
+
+# auto / chrome / msedge / chromium
+BROWSER=auto
+
+# 独立测验按需使用
+ANSWER_PROVIDER=web
+DEEPSEEK_API_KEY=
+MODEL=deepseek-chat
+BASE_URL=https://api.deepseek.com
+
+# 网页答题在工作台中使用：ANSWER_PROVIDER=web
+# doubao / qianwen / deepseek（千问和 DeepSeek 要求在官网登录）
+WEB_PLATFORM=doubao
+# guest / login，账号密码在官网输入
+WEB_LOGIN=guest
+# auto / manual，每份测验新建会话
+WEB_AUTOMATION=auto

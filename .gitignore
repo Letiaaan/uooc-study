@@ -1,0 +1,14 @@
+/node_modules/
+/config.txt
+/config.local.txt
+/data/
+/.build/
+/dist/
+.env
+.env.*
+!.env.example
+*.exe
+*.log
+*.zip
+Thumbs.db
+.DS_Store

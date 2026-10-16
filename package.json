@@ -1,0 +1,25 @@
+{
+  "name": "uooc-study",
+  "version": "0.4.12",
+  "private": true,
+  "description": "UOOC course navigator and study assistant for Windows",
+  "license": "MIT",
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "start": "node app.js",
+    "check": "node app.js --check",
+    "test": "node --test --test-concurrency=1 test/*.test.js",
+    "test:browsers": "node tools/test-browsers.js",
+    "test:promotions": "node tools/test-promotions.js",
+    "build:windows": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/build.ps1"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "8.7.3",
+    "playwright": "1.64.1"
+  },
+  "devDependencies": {
+    "linkedom": "0.18.13"
+  }
+}
