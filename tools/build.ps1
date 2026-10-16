@@ -34,13 +34,18 @@ New-Item -ItemType Directory -Path $dependencies | Out-Null
 Copy-Item -LiteralPath (Join-Path $projectDir 'package.json'), (Join-Path $projectDir 'package-lock.json') -Destination $dependencies
 & (Join-Path $nodeDir 'npm.cmd') --prefix $dependencies ci --omit=dev --ignore-scripts --no-audit --no-fund
 if ($LASTEXITCODE -ne 0) { throw 'Dependency installation failed.' }
+$completeDependencies = Join-Path $buildDir ('complete-dependencies-' + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $completeDependencies | Out-Null
+Copy-Item -LiteralPath (Join-Path $projectDir 'package.json'), (Join-Path $projectDir 'package-lock.json') -Destination $completeDependencies
+& (Join-Path $nodeDir 'npm.cmd') --prefix $completeDependencies ci --include=dev --ignore-scripts --no-audit --no-fund
+if ($LASTEXITCODE -ne 0) { throw 'Complete package dependency installation failed.' }
 
 $notices = [Text.StringBuilder]::new()
 [void]$notices.AppendLine('UOOC Study third-party software notices')
 [void]$notices.AppendLine('Node.js ' + $NodeVersion)
 [void]$notices.AppendLine([IO.File]::ReadAllText((Join-Path $nodeDir 'LICENSE')))
-Get-ChildItem -LiteralPath (Join-Path $dependencies 'node_modules') -File -Recurse | Where-Object { $_.Name -match '^(licen[cs]e|notice|copying)([.-].*)?$' } | ForEach-Object {
-    [void]$notices.AppendLine("`n=== " + $_.FullName.Substring($dependencies.Length + 1) + ' ===')
+Get-ChildItem -LiteralPath (Join-Path $completeDependencies 'node_modules') -File -Recurse | Where-Object { $_.Name -match '^(licen[cs]e|notice|copying)([.-].*)?$' } | ForEach-Object {
+    [void]$notices.AppendLine("`n=== " + $_.FullName.Substring($completeDependencies.Length + 1) + ' ===')
     [void]$notices.AppendLine([IO.File]::ReadAllText($_.FullName))
 }
 $noticePath = Join-Path $distDir 'THIRD-PARTY-NOTICES.txt'
@@ -49,7 +54,7 @@ $noticePath = Join-Path $distDir 'THIRD-PARTY-NOTICES.txt'
 function Add-File($archive, [string]$file, [string]$relative) {
     [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, $file, $relative.Replace('\', '/'), [IO.Compression.CompressionLevel]::Optimal) | Out-Null
 }
-$sourceFiles = @('app.js', 'package.json', 'package-lock.json', 'config.example.txt', 'LICENSE', 'README.md', '原理.md', '技术选型.md', '测试记录.md', '第三方声明.md', '.gitignore', 'start.bat')
+$sourceFiles = @('app.js', 'package.json', 'package-lock.json', 'config.example.txt', 'LICENSE', 'README.md', 'PRIVACY.md', 'CODE_SIGNING.md', 'SECURITY.md', '原理.md', '技术选型.md', '测试记录.md', '第三方声明.md', '.gitignore', 'start.bat')
 $payloadPath = Join-Path $buildDir ('payload-' + [guid]::NewGuid().ToString('N') + '.zip')
 $archive = [IO.Compression.ZipFile]::Open($payloadPath, [IO.Compression.ZipArchiveMode]::Create)
 try {
@@ -76,14 +81,14 @@ catch {
     catch { Write-Host 'The updated launcher is available in dist\UOOC-Study.exe.' }
 }
 
-foreach ($kind in @('windows-x64', 'source')) {
+foreach ($kind in @('windows-x64', 'source', 'complete-windows-x64')) {
     $zipPath = Join-Path $distDir "UOOC-Study-$kind.zip"
     $releaseStream = [IO.File]::Open($zipPath, [IO.FileMode]::Create)
     $release = [IO.Compression.ZipArchive]::new($releaseStream, [IO.Compression.ZipArchiveMode]::Create)
     try {
         if ($kind -eq 'windows-x64') {
             Add-File $release $exePath 'UOOC-Study.exe'
-            foreach ($file in @('start.bat', 'config.example.txt', 'README.md', '原理.md', '技术选型.md', '测试记录.md', '第三方声明.md', 'LICENSE')) {
+            foreach ($file in @('start.bat', 'config.example.txt', 'README.md', 'PRIVACY.md', 'CODE_SIGNING.md', 'SECURITY.md', '原理.md', '技术选型.md', '测试记录.md', '第三方声明.md', 'LICENSE')) {
                 Add-File $release (Join-Path $projectDir $file) $file
             }
             Add-File $release $noticePath 'THIRD-PARTY-NOTICES.txt'
@@ -92,6 +97,16 @@ foreach ($kind in @('windows-x64', 'source')) {
             foreach ($folder in @('lib', 'ui', 'tools', 'test', '.github')) {
                 Get-ChildItem -LiteralPath (Join-Path $projectDir $folder) -File -Recurse | ForEach-Object {
                     Add-File $release $_.FullName $_.FullName.Substring($projectDir.Length + 1)
+                }
+            }
+            if ($kind -eq 'complete-windows-x64') {
+                Add-File $release $exePath 'UOOC-Study.exe'
+                Add-File $release $noticePath 'THIRD-PARTY-NOTICES.txt'
+                Get-ChildItem -LiteralPath (Join-Path $completeDependencies 'node_modules') -File -Recurse | ForEach-Object {
+                    Add-File $release $_.FullName $_.FullName.Substring($completeDependencies.Length + 1)
+                }
+                Get-ChildItem -LiteralPath $nodeDir -File -Recurse | ForEach-Object {
+                    Add-File $release $_.FullName ('runtime/' + $_.FullName.Substring($nodeDir.Length + 1))
                 }
             }
         }

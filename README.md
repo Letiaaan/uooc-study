@@ -6,6 +6,10 @@
 
 当前版本 **0.4.12**，主要支持 **Windows 10 / 11 x64**。
 
+[隐私政策 / Privacy Policy](PRIVACY.md) · [Code signing policy / 代码签名政策](CODE_SIGNING.md) · [安全报告 / Security Policy](SECURITY.md)
+
+**签名状态：已申请 SignPath Foundation，尚未获批或接入。当前启动器未签名。** Windows 提示与检查方法见代码签名政策，请保持系统安全防护开启。
+
 ## 已实现的功能
 
 | 功能 | 使用方式与行为 |
@@ -18,7 +22,7 @@
 | 视频弹题 | 单选依次尝试选项，多选尝试非空组合；超过八个选项或特殊交互由本人处理 |
 | 独立测验 | 读取整卷文字题，按题号取得答案、校验、填写并提交 |
 | 网页 AI | 支持豆包、千问、DeepSeek，每份测验新建会话，自动发送并读取回复 |
-| DeepSeek API | 仅在网页ai不可用时，用户自主选择开启调用，用来测验取答或主动测试连接；启动与正常播放视频不检查密钥 |
+| DeepSeek API | 网页 AI 不可用时可由用户手动切换；仅在选用 API 后的测验取答或主动测试连接时调用，启动与正常播放视频不检查密钥 |
 | 运行中切换答题方式 | 正在取答的试卷可切换平台或 API；旧回复忽略，填写或提交中的设置从下一卷生效 |
 | 登录与验证提示 | AI 登录显示大字提示；UOOC 简单验证自动尝试一次，挑战或失败时等待本人处理 |
 | 最终交卷 | 等待官网验证结果就绪，继续点击最终“提交”，观察回执与完成状态 |
@@ -31,11 +35,15 @@
 
 ### 直接运行 Windows 程序
 
-1. 从仓库 **Releases** 下载 `UOOC-Study-windows-x64.zip`。
+1. 从仓库 **Releases** 下载 **`UOOC-Study-complete-windows-x64.zip`（完整包）**。
 2. **完整解压**到可写目录，例如 `D:\UOOC-Study`，不要直接在压缩包内运行。
 3. 双击 `UOOC-Study.exe` 或 `start.bat`，浏览器会打开本机工作台。
 
 EXE 内置 Node.js 和依赖，**无需另装 Node.js、Python 或模型环境**。首次启动会将运行时解压到 `%LOCALAPPDATA%\UOOC-Study\runtime`，可能需要稍等。
+
+完整包同时包含 `app.js`、`lib/`、`ui/`、`test/`、`tools/`、`.github/`、全部文档、BAT、EXE、完整 `node_modules/` 及官方 Node.js 运行时 `runtime/`。仅排除个人配置、登录数据、构建缓存和历史程序。解压后可直接运行，也可用 `runtime\node.exe app.js` 启动包内源码。
+
+`UOOC-Study-windows-x64.zip` 是较小的运行包，源码和依赖封装在 EXE 内，不展开源码目录；`UOOC-Study-source.zip` 用于源码仓库，不包含运行依赖。需要文件齐全的目录请选择完整包。
 
 程序优先使用本机 Chrome / Edge；两者均不可用时尝试联网下载 Playwright Chromium。建议提前安装 Chrome 或 Edge。
 
@@ -197,14 +205,16 @@ BASE_URL=https://api.deepseek.com
 
 ## 七、数据与公开仓库
 
-以下内容只用于本机，**不应上传 GitHub**，已加入 `.gitignore`：
+以下内容**不应提交到 GitHub 源码仓库**，已加入 `.gitignore`；运行依赖和 EXE 可以随完整包发布到 Releases：
 
 - `config.txt`、`.env` 等实际配置：可能包含账号密码或密钥。
 - `data/`：UOOC / AI 登录会话、课程记录、日志和临时答案。
 - `.build/`：构建缓存、本地测试页面和诊断报告。
-- `node_modules/`、`dist/`、EXE 和 ZIP：安装依赖或构建产物。
+- `node_modules/`、`runtime/`、`dist/`、EXE 和 ZIP：安装依赖、随包运行时或构建产物。
 
 日志按程序当前与先前已知的密码、密钥脱敏，发布前仍需本人核对。模型请求会将题干与选项发送到所选 AI 官网或配置的 API 地址。
+
+数据保存位置、第三方政策、退出账号和卸载清理步骤见 [隐私政策](PRIVACY.md)。每卷新开聊天和清理本地答案不会删除 AI 官网历史记录。
 
 ## 八、开发、测试与打包
 
@@ -222,7 +232,7 @@ npm run build:windows
 - `test:promotions`：检查推广关闭，不下载软件。
 - `build:windows`：使用系统 .NET Framework C# 编译器打包，从 Node.js 官方下载运行时并核对 SHA256。
 
-输出 `dist/UOOC-Study.exe`、`dist/UOOC-Study-windows-x64.zip`、`dist/UOOC-Study-source.zip` 和 `THIRD-PARTY-NOTICES.txt`。根目录同步最新 EXE；旧程序占用时生成 `UOOC-Study-版本号.exe`。源码包按明确清单生成，不包含实际配置、运行数据或构建缓存。
+输出 `dist/UOOC-Study.exe`、`dist/UOOC-Study-complete-windows-x64.zip`（完整包）、`dist/UOOC-Study-windows-x64.zip`（较小运行包）、`dist/UOOC-Study-source.zip`（纯源码）和 `THIRD-PARTY-NOTICES.txt`。完整包包含生产和开发依赖、官方 Node.js 运行时及全部源码文件；源码包按明确清单生成，不包含实际配置、运行数据或构建缓存。根目录同步最新 EXE；旧程序占用时生成 `UOOC-Study-版本号.exe`。
 
 GitHub Actions 会在推送、Pull Request 或手动触发时，在 Windows 上运行自动检查、环境检查和打包。ZIP 在该次 Actions 的 Artifacts 下载；**不会自动发布 Release**。
 
@@ -235,7 +245,14 @@ GitHub Actions 会在推送、Pull Request 或手动触发时，在 Windows 上�
 1. 在 GitHub 新建空仓库 `uooc-study`。
 2. 解压 `UOOC-Study-source.zip`，上传**解压后的源码文件**，包括 `.gitignore` 与 `.github/`；不要整体上传本机运行目录，也不要只上传一个源码 ZIP。
 3. 使用 Git 命令行时，在解压目录初始化仓库，提交前用 `git status --short` 检查清单，再推送至自己的仓库地址。
-4. 提供免安装下载时，新建版本 Release，将 `UOOC-Study-windows-x64.zip` 作为附件上传；EXE 无需提交到源码历史。
+4. 提供完整下载时，新建版本 Release，将 `UOOC-Study-complete-windows-x64.zip` 作为附件上传；EXE 与运行依赖无需提交到源码历史。
+
+已有仓库时，可用 GitHub Desktop 同步更新：
+
+1. 登录后通过 **File → Clone repository** 克隆自己的仓库到新目录；已有克隆目录时先点 **Fetch origin / Pull origin**，取得网页上的修改。
+2. 将新版纯源码包解压到临时目录，把其中的源码复制到克隆目录，保留克隆目录的 `.git`。核对 README 等文件，合并需要保留的网页编辑。
+3. 在 **Changes** 查看差异，确认没有实际配置、`data/`、密钥、EXE 或依赖。填写提交说明，点击 **Commit to main**，再点 **Push origin**。
+4. 若只是补文档，无需重发二进制 Release；需要更新下载包时，再把重新构建的 ZIP 上传到对应 Release。修改了程序功能时应更新版本并发布新版本。
 
 ### 目录结构
 
@@ -265,3 +282,5 @@ DeepSeek 网页登录后真实整卷、长视频完整计入进度及其他课�
 本项目按 [MIT License](LICENSE) 分发。分发依赖时保留许可及 Windows 包中的 `THIRD-PARTY-NOTICES.txt`。组件与资料来源见 [第三方声明.md](第三方声明.md)。
 
 更多说明：[原理](原理.md) · [技术选型与网站依据](技术选型.md) · [测试记录](测试记录.md)。
+
+项目政策：[隐私政策](PRIVACY.md) · [Code signing policy](CODE_SIGNING.md) · [安全报告](SECURITY.md)。

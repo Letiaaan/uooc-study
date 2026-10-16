@@ -1,4 +1,5 @@
 /node_modules/
+/runtime/
 /config.txt
 /config.local.txt
 /data/
