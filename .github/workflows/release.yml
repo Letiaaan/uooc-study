@@ -1,0 +1,90 @@
+name: Prepare release draft
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing version tag, for example v0.4.13'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.14.1'
+          cache: npm
+      - name: Validate version and tag source
+        id: version
+        shell: pwsh
+        run: |
+          node tools/release-metadata.js --tag $env:RELEASE_TAG --validate-only
+          if ($LASTEXITCODE -ne 0) { throw 'Invalid release version' }
+          git show-ref --verify "refs/tags/$env:RELEASE_TAG"
+          if ($LASTEXITCODE -ne 0) { throw 'The release tag does not exist' }
+          $tagCommit = git rev-parse "$env:RELEASE_TAG^{commit}"
+          $headCommit = git rev-parse HEAD
+          if ($tagCommit -ne $headCommit) { throw 'Checked-out source differs from tag' }
+      - run: npm ci
+      - run: npm test
+      - run: npm run check
+      - run: npm run build:windows
+      - run: .\UOOC-Study.exe --check
+      - name: Prepare notes and checksums
+        shell: pwsh
+        run: |
+          $releaseCommit = git rev-parse HEAD
+          node tools/release-metadata.js --tag $env:RELEASE_TAG --commit $releaseCommit --repository $env:GITHUB_REPOSITORY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-files
+          if-no-files-found: error
+          path: |
+            dist/*.zip
+            dist/SHA256SUMS.txt
+            dist/THIRD-PARTY-NOTICES.txt
+            .build/release-notes.md
+          include-hidden-files: true
+
+  draft:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_TAG: ${{ needs.build.outputs.tag }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-files
+      - name: Verify files and create draft
+        shell: bash
+        run: |
+          set -euo pipefail
+          (cd dist && sha256sum --check SHA256SUMS.txt)
+          gh release create "$RELEASE_TAG" \
+            dist/*.zip dist/SHA256SUMS.txt dist/THIRD-PARTY-NOTICES.txt \
+            --verify-tag --draft --title "UOOC Study $RELEASE_TAG" \
+            --notes-file .build/release-notes.md

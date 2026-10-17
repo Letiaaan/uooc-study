@@ -28,14 +28,18 @@ test('local browser connects to its own loopback endpoint and closes gracefully 
         close: async () => { closed++; }
     };
     const result = await launchLocalBrowser('C:/Browser/chrome.exe', 'C:/Sample Data/profile', {
+        background: true,
         start: (executable, args, options) => {
             assert.equal(executable, 'C:/Browser/chrome.exe');
             assert.ok(args.includes('--user-data-dir=C:/Sample Data/profile'));
             assert.ok(args.includes('--remote-debugging-address=127.0.0.1'));
             assert.ok(args.includes('--disable-backgrounding-occluded-windows'));
+            assert.ok(args.includes('--no-startup-window'));
+            assert.equal(args.includes('--start-maximized'), false);
             port = Number(args.find(value => value.startsWith('--remote-debugging-port=')).split('=')[1]);
             assert.ok(port > 0);
             assert.equal(options.stdio, 'ignore');
+            assert.equal(options.windowsHide, true);
             return child;
         },
         request: async url => {

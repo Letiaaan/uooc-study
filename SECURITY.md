@@ -4,7 +4,7 @@ Last updated / 最后更新：2026-10-17。
 
 ## Supported versions / 支持范围
 
-Security fixes are targeted at the latest released version, currently **0.4.12**. Older versions may not receive backported fixes. This is a community project with no guaranteed response time or independent audit claim.
+Security fixes target the latest stable version listed on [GitHub Releases](https://github.com/Letiaaan/uooc-study/releases). Older versions may not receive backported fixes. This is a community project with no guaranteed response time or independent audit claim.
 
 安全修复优先提供给最新发布版本；旧版本不保证回补。维护者会核对报告、评估影响并通过修复版本及发布说明通知用户，目前不承诺固定响应时限。
 

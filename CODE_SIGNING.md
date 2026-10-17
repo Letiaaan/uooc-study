@@ -4,7 +4,7 @@ Last updated: 2026-10-17.
 
 ## Current status / 当前状态
 
-**A SignPath Foundation application has been submitted; approval and signing integration are pending. Current UOOC Study 0.4.12 launcher releases are unsigned.**
+**A SignPath Foundation application has been submitted; approval and signing integration are pending. Current UOOC Study launchers are unsigned, including version 0.4.13 prepared for release.**
 
 已提交 SignPath Foundation 申请，尚未获批或接入签名。当前发布的启动器没有代码签名。申请不代表安全认证；本页也不表示 SignPath 已为项目提供签名服务。
 

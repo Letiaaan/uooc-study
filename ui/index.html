@@ -39,19 +39,20 @@
             <label class="browser-field">学习浏览器<select id="browser"><option value="auto">自动选择</option><option value="chrome">Chrome</option><option value="msedge">Edge</option><option value="chromium">Chromium</option></select></label>
             <button id="connect" class="primary" type="submit">连接并加载课程</button>
           </form>
-          <div class="account-foot"><span>已登录时会复用会话；也可以在弹出的浏览器中填写账号。</span><button id="logout" class="text-button" disabled>退出账号</button></div>
+          <div class="account-foot"><span>先在后台自动填写并登录；需要本人处理时才提醒，无需在官网重复输入。</span><button id="logout" class="text-button" disabled>退出账号</button></div>
+          <label class="reminder-setting"><input id="verification-popup" type="checkbox" checked>需要人工处理时弹出提醒<span>关闭后只在工作台显示，可随时手动前往验证。</span></label>
         </section>
         <div class="workspace-grid">
           <section class="course-panel" aria-labelledby="course-title">
             <div class="section-heading"><div><h2 id="course-title">选择课程</h2><span id="course-count">连接后显示课程列表</span></div><label class="select-all"><input type="checkbox" id="select-all" disabled>全选</label></div>
             <div id="courses" class="course-list"><div class="empty"><div class="empty-book" aria-hidden="true">▤</div><h3>从连接账号开始</h3><p>完成浏览器中的登录与验证后，<br>你的课程会显示在这里。</p></div></div>
-            <div class="run-toolbar"><label>运行模式<select id="mode"><option value="video">优先视频，受阻时处理测验</option><option value="inspect">仅查看目录与任务状态</option><option value="quiz-one">试跑首份独立测验</option><option value="quiz">处理独立测验</option></select></label><button id="run" class="primary" disabled>开始运行<span id="selected-count"></span></button></div>
+            <div class="run-toolbar"><label>运行模式<select id="mode"><option value="video">优先视频，受阻时处理测验</option><option value="quiz">处理独立测验</option><option value="inspect">仅查看目录与任务状态</option></select></label><button id="run" class="primary" disabled>开始运行<span id="selected-count"></span></button></div>
           </section>
           <aside class="task-panel" aria-labelledby="task-title">
             <div class="section-heading"><h2 id="task-title">当前任务</h2><span class="live-dot" id="live-dot"></span></div>
             <div class="task-content"><span id="current-course" class="task-course">等待选择课程</span><h3 id="current-title">准备好后，点击开始</h3><div class="progress-track"><div id="progress-fill"></div></div><div class="progress-meta"><span id="progress-time">—</span><span id="progress-status">待开始</span></div></div>
             <div class="task-actions"><button id="pause" disabled>暂停</button><button id="stop" class="danger-text" disabled>停止任务</button></div>
-            <p class="task-help">暂停视频立即生效；页面操作会在下一个安全节点暂停。浏览器可以置于后台；若最小化导致页面停止绘制，程序会恢复窗口以继续操作。停止后可重新连接续跑。</p>
+            <p class="task-help">暂停视频立即生效；页面操作会在下一个安全节点暂停。浏览器可放在后台；最小化影响绘制时会尝试恢复窗口，不切换到前台。停止后可重新连接续跑。</p>
             <div id="verification" class="verification-note" hidden><strong>等待官网验证</strong><p id="verification-text"></p><button id="show-verification">前往验证页面</button></div>
             <div class="answer-route"><span>独立测验答题方式</span><strong id="provider-label">豆包网页答题</strong><button class="text-button" data-go="ai">修改设置</button></div>
           </aside>

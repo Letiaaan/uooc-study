@@ -5,6 +5,9 @@ PASSWORD=
 # auto / chrome / msedge / chromium
 BROWSER=auto
 
+# true / false，需要人工处理时弹出前台提醒；false 只保留工作台提示
+VERIFICATION_POPUP=true
+
 # 独立测验按需使用
 ANSWER_PROVIDER=web
 DEEPSEEK_API_KEY=

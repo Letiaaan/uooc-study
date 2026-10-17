@@ -19,11 +19,13 @@ function fixture(windowState) {
 
 test('a minimized program window is restored once without bringing a tab to the foreground', async () => {
     const { page, calls } = fixture('minimized');
-    await Promise.all([ensureRendered(page), ensureRendered(page)]);
-    await ensureRendered(page);
+    let restored = 0;
+    const options = { restore: async actual => { assert.equal(actual, page); restored++; return true; } };
+    await Promise.all([ensureRendered(page, options), ensureRendered(page, options)]);
+    await ensureRendered(page, options);
     assert.equal(calls.filter(call => call.method === 'Target.getTargetInfo').length, 1);
-    assert.deepEqual(calls.find(call => call.method === 'Browser.setWindowBounds').params,
-        { windowId: 7, bounds: { windowState: 'normal' } });
+    assert.equal(restored, 1);
+    assert.equal(calls.some(call => call.method === 'Browser.setWindowBounds'), false);
     assert.equal(calls.at(-1).method, 'detach');
 });
 

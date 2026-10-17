@@ -90,3 +90,44 @@ test('automatic web answers save each paper with no web-ready IPC or API call', 
     assert.equal(new Set(files).size, 2);
     channel.emit('disconnect');
 });
+
+test('worker starts UOOC in the background, applies live reminder settings and ignores resolved notice links', { timeout: 5000 }, async () => {
+    const channel = new EventEmitter(), events = new EventEmitter();
+    const messages = [], updates = [];
+    let callbacks, finishLogin, shown = 0;
+    channel.connected = true;
+    channel.send = message => { messages.push(message); events.emit('output', message); };
+    const next = predicate => messages.find(predicate) || new Promise(resolve => {
+        const handle = message => { if (predicate(message)) { events.off('output',handle); resolve(message); } };
+        events.on('output',handle);
+    });
+    const gate = new Promise(resolve => { finishLogin = resolve; });
+    const page = { isClosed: () => false, setDefaultTimeout() {}, bringToFront: async () => { shown++; } };
+    const context = Object.assign(new EventEmitter(), {pages: () => [page], close: async () => {}});
+    const config = {browser:'chrome',provider:'web',verificationPopup:true};
+    startWorker({channel, open: async options => { assert.equal(options.background,true); return context; },
+        createNotice: options => { callbacks=options; return {update: (value,enabled) => updates.push({value,enabled})}; },
+        login: async (tab,get,{onVerify}) => { onVerify({kind:'login',message:'fixture challenge'}); await gate; },
+        readCourses: async () => [{id:'1',title:'fixture'}]
+    });
+    channel.emit('message',{type:'connect',config});
+    const pending = await next(message => message.type==='state' && message.value.verification);
+    const id = pending.value.verification.id;
+    assert.equal(shown,0);
+    callbacks.onOpen(id);
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(shown,1);
+    channel.emit('message',{type:'configure',config:{...config,verificationPopup:false}});
+    assert.equal(updates.at(-1).enabled,false);
+    assert.equal(updates.at(-1).value.id,id);
+    channel.emit('message',{type:'show-verification'});
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(shown,2);
+    finishLogin();
+    await next(message => message.type==='state' && message.value.busy===false);
+    assert.equal(updates.at(-1).value,null);
+    callbacks.onOpen(id);
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(shown,2);
+    channel.emit('disconnect');
+});

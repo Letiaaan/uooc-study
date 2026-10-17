@@ -4,7 +4,7 @@
 
 默认使用 **网页 AI → 豆包 → 访客 → 自动答题**，无需填写 API Key。千问、DeepSeek 网页需要先在官网登录；程序等待本人完成登录，再继续处理当前测验。
 
-当前版本 **0.4.12**，主要支持 **Windows 10 / 11 x64**。
+当前版本 **0.4.13**，主要支持 **Windows 10 / 11 x64**。
 
 [隐私政策 / Privacy Policy](PRIVACY.md) · [Code signing policy / 代码签名政策](CODE_SIGNING.md) · [安全报告 / Security Policy](SECURITY.md)
 
@@ -24,7 +24,7 @@
 | 网页 AI | 支持豆包、千问、DeepSeek，每份测验新建会话，自动发送并读取回复 |
 | DeepSeek API | 网页 AI 不可用时可由用户手动切换；仅在选用 API 后的测验取答或主动测试连接时调用，启动与正常播放视频不检查密钥 |
 | 运行中切换答题方式 | 正在取答的试卷可切换平台或 API；旧回复忽略，填写或提交中的设置从下一卷生效 |
-| 登录与验证提示 | AI 登录显示大字提示；UOOC 简单验证自动尝试一次，挑战或失败时等待本人处理 |
+| 登录与验证提示 | AI 登录显示大字提示；UOOC 简单验证自动尝试一次；需本人处理时才提醒，弹窗可关闭 |
 | 最终交卷 | 等待官网验证结果就绪，继续点击最终“提交”，观察回执与完成状态 |
 | 临时答案管理 | 每卷分别保存、回读并校验；确认通过后只清理该卷答案，失败或结果不明时保留 |
 | 异常接管 | 保留原试卷，可继续读取、手动粘贴答案或跳过；关闭已识别的豆包电脑版推广 |
@@ -70,8 +70,9 @@ npm start
 
 - 表单输入只在本次程序会话使用，不会自动写回配置文件。
 - 也可以留空，在程序打开的 UOOC 官网窗口里手动登录。
-- 账号已完整填写时，程序尝试一次简单验证；官网确认通过且按钮可用后，自动点击登录一次。
-- 图片、滑块挑战、验证失败或账号安全提示需本人处理。**简单验证不保证每次自动通过。**
+- 账号已完整填写时，先在后台自动填入官网，再尝试一次简单验证；通过后自动点击登录一次，无需在官网重复输入。
+- 自动流程成功时不弹人工处理提醒。图片、滑块挑战、验证失败或账号提示需本人处理，提醒中可点“前往页面”或“稍后处理”。**简单验证不保证每次自动通过。**
+- 账号区可随时关闭“需要人工处理时弹出提醒”，关闭后只在工作台显示待处理状态，点击“前往验证页面”即可自行处理；设置即时生效。
 
 后续启动会尝试复用所选浏览器的会话；网站可能使其过期，届时需要重新登录。Chrome 与 Edge 使用不同档案，切换浏览器后可能需要分别登录。日常浏览器里的登录不会自动带入程序。
 
@@ -87,10 +88,9 @@ npm start
 | --- | --- |
 | 优先视频，受阻时处理测验 | 优先学习可访问视频；目录受阻时处理已发现的测验，再检查后续目录 |
 | 仅查看目录与任务状态 | 检查页面识别、资源与完成状态，不播放或提交测验 |
-| 试跑首份独立测验 | **建议首次使用选择**；找到首份未完成的普通测验，尝试一次后停止，不继续第二份 |
 | 处理独立测验 | 按章节处理可访问的普通测验，跳过网站已确认完成的项目 |
 
-可勾选多门课程，程序逐门处理。试跑结果不明确或未通过时也会停止，并保留测验页供核对。
+可勾选多门课程，程序逐门处理。首次使用可先选“仅查看目录与任务状态”检查识别结果，再选择学习或测验模式。
 
 ### 4. 等待自动取答与提交
 
@@ -153,7 +153,7 @@ AI 可能答错、拒答或受到额度限制。程序使用普通网页控件�
 | 修改内容 | 生效时机 |
 | --- | --- |
 | 网页 / API、平台、登录方式、自动 / 手动、API 配置 | 正在取答的试卷按新配置重新取答，旧回复忽略；填写或交卷中的试卷从下一次取答生效 |
-| 主题、查看日志、复制题目、手动答案校验 | 随时使用 |
+| 主题、验证提醒开关、查看日志、复制题目、手动答案校验 | 随时使用 |
 | 课程范围、运行模式、UOOC 账号、浏览器、刷新课程、退出账号 | 先停止任务；受限操作会弹窗说明 |
 
 已发送的 API 请求可能仍计费。网页发送结果不确定时只继续读取，不自动重复发送；原会话被关闭时，需要本人找回答案。
@@ -166,6 +166,7 @@ AI 可能答错、拒答或受到额度限制。程序使用普通网页控件�
 USERNAME=
 PASSWORD=
 BROWSER=auto
+VERIFICATION_POPUP=true
 ANSWER_PROVIDER=web
 WEB_PLATFORM=doubao
 WEB_LOGIN=guest
@@ -177,6 +178,7 @@ BASE_URL=https://api.deepseek.com
 
 | 配置项 | 支持值 |
 | --- | --- |
+| `VERIFICATION_POPUP` | `true` / `false`；需本人处理时是否弹出桌面提醒，工作台提示始终保留 |
 | `BROWSER` | `auto` / `chrome` / `msedge` / `chromium` |
 | `ANSWER_PROVIDER` | `web` / `api` |
 | `WEB_PLATFORM` | `doubao` / `qianwen` / `deepseek` |
@@ -203,75 +205,21 @@ BASE_URL=https://api.deepseek.com
 
 **临时答案在哪里，为什么没有删除？** 每卷位于 `data/temp-answers/quiz-*/`，含原回复 `reply.txt`、规范答案 `answers.txt` 和标识 `paper.json`。确认通过后才清理；未通过、结果未知、标识异常或目录多出文件时保留供核对。
 
-## 七、数据与公开仓库
+## 七、数据与隐私
 
-以下内容**不应提交到 GitHub 源码仓库**，已加入 `.gitignore`；运行依赖和 EXE 可以随完整包发布到 Releases：
+账号、API 设置和课程记录在本机处理；配置文件可能保存明文秘密，浏览器档案会保留登录会话。网页 AI 或 API 答题会把题干与选项发送到所选服务。
 
-- `config.txt`、`.env` 等实际配置：可能包含账号密码或密钥。
-- `data/`：UOOC / AI 登录会话、课程记录、日志和临时答案。
-- `.build/`：构建缓存、本地测试页面和诊断报告。
-- `node_modules/`、`runtime/`、`dist/`、EXE 和 ZIP：安装依赖、随包运行时或构建产物。
+程序尝试脱敏日志，分享前仍需本人核对。不要公开配置文件、登录档案或未脱敏日志。每卷新开聊天和清理本地答案不会删除 AI 官网历史记录。详细保存位置、第三方政策与卸载步骤见 [隐私政策](PRIVACY.md)。
 
-日志按程序当前与先前已知的密码、密钥脱敏，发布前仍需本人核对。模型请求会将题干与选项发送到所选 AI 官网或配置的 API 地址。
+## 八、项目更新与反馈
 
-数据保存位置、第三方政策、退出账号和卸载清理步骤见 [隐私政策](PRIVACY.md)。每卷新开聊天和清理本地答案不会删除 AI 官网历史记录。
+从 [GitHub Releases](https://github.com/Letiaaan/uooc-study/releases) 下载发布版本，功能变化见 [更新记录](CHANGELOG.md)。遇到使用问题，可在 [Issues](https://github.com/Letiaaan/uooc-study/issues) 提供版本、浏览器、复现步骤和脱敏后的错误信息；安全漏洞按 [安全政策](SECURITY.md) 私下报告。
 
-## 八、开发、测试与打包
-
-```powershell
-npm ci
-npm test
-npm run check
-npm run test:browsers
-npm run test:promotions
-npm run build:windows
-```
-
-- `npm test`：78 项检查，覆盖目录、浏览器、取答、校验、运行控制、交卷、访问控制与清理。
-- `test:browsers`：本机 Chrome / Edge 配合豆包 / 千问本地样例，每组两份 30 题试卷，共 8 份；默认不显示窗口，不访问真实课程或 AI 官网。需观察时追加 `-- --headed`。
-- `test:promotions`：检查推广关闭，不下载软件。
-- `build:windows`：使用系统 .NET Framework C# 编译器打包，从 Node.js 官方下载运行时并核对 SHA256。
-
-输出 `dist/UOOC-Study.exe`、`dist/UOOC-Study-complete-windows-x64.zip`（完整包）、`dist/UOOC-Study-windows-x64.zip`（较小运行包）、`dist/UOOC-Study-source.zip`（纯源码）和 `THIRD-PARTY-NOTICES.txt`。完整包包含生产和开发依赖、官方 Node.js 运行时及全部源码文件；源码包按明确清单生成，不包含实际配置、运行数据或构建缓存。根目录同步最新 EXE；旧程序占用时生成 `UOOC-Study-版本号.exe`。
-
-GitHub Actions 会在推送、Pull Request 或手动触发时，在 Windows 上运行自动检查、环境检查和打包。ZIP 在该次 Actions 的 Artifacts 下载；**不会自动发布 Release**。
-
-### 上传 GitHub
-
-推荐仓库名 **`uooc-study`**，显示名称 **UOOC Study**，简介可填写：
-
-> UOOC 本地学习工作台：新旧界面适配、视频学习、网页 AI / DeepSeek API 测验辅助，支持 Chrome 与 Edge。
-
-1. 在 GitHub 新建空仓库 `uooc-study`。
-2. 解压 `UOOC-Study-source.zip`，上传**解压后的源码文件**，包括 `.gitignore` 与 `.github/`；不要整体上传本机运行目录，也不要只上传一个源码 ZIP。
-3. 使用 Git 命令行时，在解压目录初始化仓库，提交前用 `git status --short` 检查清单，再推送至自己的仓库地址。
-4. 提供完整下载时，新建版本 Release，将 `UOOC-Study-complete-windows-x64.zip` 作为附件上传；EXE 与运行依赖无需提交到源码历史。
-
-已有仓库时，可用 GitHub Desktop 同步更新：
-
-1. 登录后通过 **File → Clone repository** 克隆自己的仓库到新目录；已有克隆目录时先点 **Fetch origin / Pull origin**，取得网页上的修改。
-2. 将新版纯源码包解压到临时目录，把其中的源码复制到克隆目录，保留克隆目录的 `.git`。核对 README 等文件，合并需要保留的网页编辑。
-3. 在 **Changes** 查看差异，确认没有实际配置、`data/`、密钥、EXE 或依赖。填写提交说明，点击 **Commit to main**，再点 **Push origin**。
-4. 若只是补文档，无需重发二进制 Release；需要更新下载包时，再把重新构建的 ZIP 上传到对应 Release。修改了程序功能时应更新版本并发布新版本。
-
-### 目录结构
-
-```text
-app.js               程序入口：GUI / CLI / 环境检查
-lib/                 UOOC、浏览器、网页 AI、API 与任务处理
-ui/                  工作台界面、主题和交互
-test/                自动检查
-tools/               Windows 打包与浏览器样例测试
-.github/workflows/   Windows 自动构建
-config.example.txt   空配置示例
-start.bat            Windows 启动入口
-```
-
-命令行支持 `node app.js --cli`、`--inspect --courses=all`、`--mode=video --courses=1,2`、`--mode=quiz --courses=1` 和 `--logout`。缺少账号密码时提示输入，密码遮罩；**命令行独立测验使用 API，网页答题请使用工作台**。
+开发、测试、打包和 GitHub Desktop 同步方法见 [开发与发布指南](CONTRIBUTING.md)。版本标签触发自动测试和打包，生成 Release 草稿供维护者确认；当前签名申请尚在审核中。
 
 ## 验证范围与使用规则
 
-2026-10-16 在真实新版 UOOC 的发展心理学课程确认四组测验通过：Chrome＋豆包第四章、Chrome＋千问登录第五章、Edge＋千问登录第六章、Edge＋豆包第七章；均确认网站完成并清理本卷答案。测试包含本人登录与必要人工处理，Edge＋豆包扫描期间恢复过最小化窗口。完整过程见 [测试记录.md](测试记录.md)。
+已对 Chrome / Edge 与豆包 / 千问进行组合验证，具体版本、流程与限制见 [测试记录](测试记录.md)。测试包含本人登录及必要人工处理；网站更新后仍可能需要重新适配。
 
 DeepSeek 网页登录后真实整卷、长视频完整计入进度及其他课程解锁规则尚未完成真实验证。网页变化、AI 回答质量、次数与额度可能影响结果。请结合学校、课程和平台规则决定使用范围；UOOC [服务条款](https://www.uooc.net.cn/misc/provision) 与 [学习帮助](https://www.uooc.net.cn/misc/support) 以官网为准。
 

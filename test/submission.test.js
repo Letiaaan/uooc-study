@@ -16,8 +16,26 @@ test('an enabled final button does not bypass pending verification; success resu
     const page = { isClosed: () => false, frames: () => [frame], waitForTimeout: async () => { verified = true; } };
     assert.equal(await finishSubmission(page, { onVerify: notice => notices.push(notice) }), '页面确认通过');
     assert.equal(clicked, 1);
+    assert.equal(notices.filter(Boolean).length, 0);
+    assert.equal(notices.at(-1), null);
+});
+
+test('a quiz challenge requests help once and clears the notice after manual verification', async () => {
+    let verified = false, clicked = 0;
+    const notices = [];
+    const root = { isVisible: async () => true, evaluate: async () => verified ? 'verified' : 'manual' };
+    const final = { isVisible: async () => true, evaluate: async () => ({ enabled: true, verificationPending: !verified }),
+        click: async () => { assert.equal(verified, true); clicked++; } };
+    const frame = { evaluate: async () => false, locator: selector => ({
+        allTextContents: async () => clicked ? ['测验已通过'] : [],
+        all: async () => selector.startsWith('div.btn') ? [final] : selector === '#aliyunCaptcha-checkbox-wrapper' ? [root] : []
+    }) };
+    const page = { isClosed: () => false, frames: () => [frame], waitForTimeout: async () => { verified = true; } };
+    assert.equal(await finishSubmission(page, { onVerify: value => notices.push(value) }), '页面确认通过');
+    assert.equal(notices.filter(Boolean).length, 1);
     assert.equal(notices[0].kind, 'quiz');
     assert.equal(notices.at(-1), null);
+    assert.equal(clicked, 1);
 });
 
 test('verification failure is not a failed quiz, and a graded paper means already submitted', async () => {

@@ -1,6 +1,6 @@
 # Privacy Policy / 隐私政策
 
-Last updated / 最后更新：2026-10-17。适用于 UOOC Study 0.4.12；后续数据处理变化会更新此文档。
+Last updated / 最后更新：2026-10-17。适用于 UOOC Study 0.4.13；后续数据处理变化会更新此文档。
 
 UOOC Study 是在用户电脑上运行的第三方学习工作台，由 [Letiaaan](https://github.com/Letiaaan) 维护。[项目源码](https://github.com/Letiaaan/uooc-study)按 MIT 许可证公开。本项目与 UOOC、豆包、千问及 DeepSeek 无隶属关系。
 
@@ -35,6 +35,8 @@ UOOC Study 是在用户电脑上运行的第三方学习工作台，由 [Letiaaa
 | 千问 | [隐私政策](https://terms.alicdn.com/legal-agreement/terms/privacy_policy_full/20231011201849846/20231011201849846.html) |
 | DeepSeek | [隐私政策](https://cdn.deepseek.com/policies/zh-CN/deepseek-privacy-policy.html) |
 | 自定义 API | 以所配置接口运营者的政策为准 |
+
+需要人工登录或验证时，Windows 版本可弹出本机桌面提醒；用户点击“前往页面”后才调出相关页面。可在工作台关闭弹窗。提醒及后台窗口恢复通过程序自带的 PowerShell / Windows 窗口接口完成，不上传账号或题目，也不更改系统安全设置。
 
 ## 保留、退出与删除
 

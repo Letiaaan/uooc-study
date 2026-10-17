@@ -158,3 +158,17 @@ test('pause holds a checkpoint until resumed and stop aborts waiting work', asyn
     await assert.rejects(control.checkpoint(), error => error.code === 'STOPPED');
     assert.equal(control.abort.signal.aborted, true);
 });
+
+test('verification popup settings can change during work and retired test modes are rejected', () => {
+    const child = fakeWorker();
+    const app = new AppController({ config, createWorker: () => child });
+    app.worker();
+    Object.assign(app.state, { busy: true, operation: 'connect' });
+    assert.equal(app.snapshot().settings.verificationPopup, true);
+    app.save({ verificationPopup: false });
+    assert.equal(child.sent.at(-1).config.verificationPopup, false);
+    assert.equal(app.snapshot().settings.verificationPopup, false);
+    assert.throws(() => app.save({ verificationPopup: 'false' }), /提醒设置无效/);
+    Object.assign(app.state, { busy: false, connected: true, courses: [{id:'1'}] });
+    assert.throws(() => app.command('run', {mode:'quiz-one',ids:['1']}), /运行模式/);
+});

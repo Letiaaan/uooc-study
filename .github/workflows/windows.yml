@@ -1,5 +1,11 @@
 name: Windows build
-on: [workflow_dispatch, push, pull_request]
+on:
+  workflow_dispatch:
+  push:
+    branches: ['main']
+  pull_request:
+permissions:
+  contents: read
 jobs:
   build:
     runs-on: windows-latest

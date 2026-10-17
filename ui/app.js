@@ -22,7 +22,7 @@ function providerFields() {
         : `${platform.name}提供访客对话入口；如当前官网要求登录或验证，请在官网处理。`;
 }
 for (const input of document.querySelectorAll('input[name=provider],#web-platform,#web-login')) input.addEventListener('change', providerFields);
-let state, initialized = false, courseSignature = '', lastLog = 0, pendingId = '', lastError = '', offline = false, testing = false, verificationId = '';
+let state, initialized = false, courseSignature = '', lastLog = 0, pendingId = '', lastError = '', offline = false, testing = false, savingReminder = false;
 let token = new URLSearchParams(location.hash.slice(1)).get('token') || sessionStorage.getItem('uooc-token') || '';
 if (token) { sessionStorage.setItem('uooc-token', token); history.replaceState(null, '', location.pathname); }
 const theme = localStorage.getItem('uooc-theme') || 'system';
@@ -73,7 +73,8 @@ async function api(route, body) {
 }
 function config(scope = 'all') {
     const provider = document.querySelector('input[name=provider]:checked').value;
-    return { ...(scope === 'ai' ? {} : { username: $('username').value.trim(), password: $('password').value, browser: $('browser').value }), provider,
+    return { ...(scope === 'ai' ? {} : { username: $('username').value.trim(), password: $('password').value, browser: $('browser').value,
+        verificationPopup: $('verification-popup').checked }), provider,
         ...(provider === 'api' ? { key: $('api-key').value.trim(), model: $('model').value.trim(), endpoint: $('endpoint').value.trim() }
             : { webPlatform: $('web-platform').value, webLogin: $('web-login').value, webAutomation: $('web-automation').value }) };
 }
@@ -189,6 +190,8 @@ function render(next) {
     $('connection-dot').classList.toggle('connected', next.connected);
     $('connect').textContent = next.connected ? '刷新课程' : '连接并加载课程';
     const stopReason = next.stopping ? '正在停止任务，请等待结束后再操作。' : '';
+    if (!savingReminder) $('verification-popup').checked = next.settings.verificationPopup !== false;
+    gate('verification-popup', stopReason || (savingReminder ? '正在保存提醒设置。' : ''));
     const accountReason = next.busy ? '请先停止当前任务，再修改 UOOC 账号或学习浏览器。' : stopReason;
     for (const id of ['username', 'password', 'browser']) gate(id, accountReason);
     $('username').readOnly = $('password').readOnly = Boolean(accountReason);
@@ -213,11 +216,6 @@ function render(next) {
     $('live-dot').classList.toggle('running', next.busy && !next.paused);
     $('verification').hidden = !next.verification;
     $('verification-text').textContent = next.verification?.message || '';
-    if (next.verification && verificationId !== next.verification.id) {
-        verificationId = next.verification.id;
-        explain(next.verification.message);
-    }
-    if (!next.verification) verificationId = '';
     const platform = webPlatforms[next.settings.webPlatform] || webPlatforms.doubao;
     const waitingLogin = Boolean(next.settings.provider === 'web' && next.web?.needsAction && /完成登录|请.*登录|登录入口已打开/.test(next.web?.note || ''));
     $('ai-login-alert').hidden = !waitingLogin;
@@ -291,6 +289,15 @@ $('pause').addEventListener('click', () => action(state?.paused ? 'resume' : 'pa
 $('stop').addEventListener('click', () => action('stop'));
 $('logout').addEventListener('click', () => action('logout'));
 $('show-verification').addEventListener('click', () => action('show-verification'));
+$('verification-popup').addEventListener('change', async () => {
+    savingReminder = true;
+    gate('verification-popup', '正在保存提醒设置。');
+    try {
+        await api('settings', { verificationPopup: $('verification-popup').checked });
+        toast($('verification-popup').checked ? '需要人工处理时会弹出提醒' : '已关闭弹窗，待处理事项仍在工作台显示');
+    } catch (error) { report(error); }
+    finally { savingReminder = false; await refresh(); }
+});
 $('select-all').addEventListener('change', () => { selected.clear(); if ($('select-all').checked) for (const course of state.courses) selected.add(course.id); for (const box of document.querySelectorAll('.course-row input')) box.checked = selected.has(box.value); updateSelection(); });
 $('copy-prompt').addEventListener('click', async () => {
     try { await navigator.clipboard.writeText($('prompt').value); toast('整卷题目已复制，请在所选官网的新会话中粘贴并发送'); }
