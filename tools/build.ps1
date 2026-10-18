@@ -54,7 +54,7 @@ $noticePath = Join-Path $distDir 'THIRD-PARTY-NOTICES.txt'
 function Add-File($archive, [string]$file, [string]$relative) {
     [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, $file, $relative.Replace('\', '/'), [IO.Compression.CompressionLevel]::Optimal) | Out-Null
 }
-$sourceFiles = @('app.js', 'package.json', 'package-lock.json', 'config.example.txt', 'LICENSE', 'README.md', 'PRIVACY.md', 'CODE_SIGNING.md', 'CODE_SIGNING_CERT.cer', 'SECURITY.md', 'CONTRIBUTING.md', 'CHANGELOG.md', '原理.md', '技术选型.md', '测试记录.md', '第三方声明.md', '.gitignore', 'start.bat')
+$sourceFiles = @('app.js', 'package.json', 'package-lock.json', 'config.example.txt', 'LICENSE', 'README.md', 'PRIVACY.md', 'CODE_SIGNING.md', 'CODE_SIGNING_CERT.cer', 'SECURITY.md', 'CONTRIBUTING.md', 'CHANGELOG.md', '原理.md', '技术选型.md', '测试记录.md', '第三方声明.md', '.gitignore', 'start.bat', 'start.vbs')
 $payloadPath = Join-Path $buildDir ('payload-' + [guid]::NewGuid().ToString('N') + '.zip')
 $archive = [IO.Compression.ZipFile]::Open($payloadPath, [IO.Compression.ZipArchiveMode]::Create)
 try {
@@ -86,7 +86,7 @@ using System.Reflection;
 [assembly: AssemblyInformationalVersion("$productVersion")]
 "@
 [IO.File]::WriteAllText($assemblyInfo,$metadata,[Text.UTF8Encoding]::new($false))
-& $compiler /nologo /target:exe /platform:x64 /optimize+ "/out:$exePath" /reference:System.IO.Compression.dll /reference:System.IO.Compression.FileSystem.dll "/resource:$payloadPath,payload.zip" (Join-Path $PSScriptRoot 'Launcher.cs') $assemblyInfo
+& $compiler /nologo /target:winexe /platform:x64 /optimize+ "/out:$exePath" /reference:System.Windows.Forms.dll /reference:System.IO.Compression.dll /reference:System.IO.Compression.FileSystem.dll "/resource:$payloadPath,payload.zip" (Join-Path $PSScriptRoot 'Launcher.cs') $assemblyInfo
 if ($LASTEXITCODE -ne 0) { throw 'EXE compilation failed.' }
 $signingStatus = @{ type = 'unsigned' }
 if ($SelfSign) {
@@ -115,7 +115,7 @@ foreach ($kind in @('windows-x64', 'source', 'complete-windows-x64')) {
         if ($kind -eq 'windows-x64') {
             Add-File $release $exePath 'UOOC-Study.exe'
             Add-File $release (Join-Path $PSScriptRoot 'code-signing.ps1') 'tools/code-signing.ps1'
-            foreach ($file in @('start.bat', 'config.example.txt', 'README.md', 'PRIVACY.md', 'CODE_SIGNING.md', 'CODE_SIGNING_CERT.cer', 'SECURITY.md', 'CHANGELOG.md', '原理.md', '技术选型.md', '测试记录.md', '第三方声明.md', 'LICENSE')) {
+            foreach ($file in @('start.bat', 'start.vbs', 'config.example.txt', 'README.md', 'PRIVACY.md', 'CODE_SIGNING.md', 'CODE_SIGNING_CERT.cer', 'SECURITY.md', 'CHANGELOG.md', '原理.md', '技术选型.md', '测试记录.md', '第三方声明.md', 'LICENSE')) {
                 Add-File $release (Join-Path $projectDir $file) $file
             }
             Add-File $release $noticePath 'THIRD-PARTY-NOTICES.txt'

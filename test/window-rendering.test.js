@@ -1,44 +1,47 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { EventEmitter } = require('node:events');
 const { ensureRendered } = require('../lib/window-rendering');
 
-function fixture(windowState) {
+function fixture() {
     const calls = [];
-    const session = {
-        send: async (method, params) => {
-            calls.push({ method, params });
-            if (method === 'Target.getTargetInfo') return { targetInfo: { targetId: 'owned-tab' } };
-            if (method === 'Browser.getWindowForTarget') return { windowId: 7, bounds: { windowState } };
-            assert.equal(method, 'Browser.setWindowBounds');
-        },
-        detach: async () => calls.push({ method: 'detach' })
-    };
-    const page = { isClosed: () => false, context: () => ({ newCDPSession: async () => session }) };
-    return { page, calls };
+    const sessions = [];
+    const page = Object.assign(new EventEmitter(), { isClosed: () => false, context: () => ({ newCDPSession: async () => {
+        const session = Object.assign(new EventEmitter(), {
+            send: async (method, params) => calls.push({ method, params }),
+            detach: async () => { calls.push({ method: 'detach' }); session.emit('close'); }
+        });
+        sessions.push(session);
+        return session;
+    } }) });
+    return { page, calls, sessions };
 }
 
-test('a minimized program window is restored once without bringing a tab to the foreground', async () => {
-    const { page, calls } = fixture('minimized');
-    let restored = 0;
-    const options = { restore: async actual => { assert.equal(actual, page); restored++; return true; } };
-    await Promise.all([ensureRendered(page, options), ensureRendered(page, options)]);
-    await ensureRendered(page, options);
-    assert.equal(calls.filter(call => call.method === 'Target.getTargetInfo').length, 1);
-    assert.equal(restored, 1);
-    assert.equal(calls.some(call => call.method === 'Browser.setWindowBounds'), false);
+test('rendering stays attached once per page without changing native window state', async () => {
+    const { page, calls, sessions } = fixture();
+    await Promise.all([ensureRendered(page), ensureRendered(page)]);
+    await ensureRendered(page);
+    assert.equal(sessions.length, 1);
+    assert.deepEqual(calls, [{ method: 'Emulation.setFocusEmulationEnabled', params: { enabled: true } }]);
+    page.emit('close');
+    await new Promise(resolve => setImmediate(resolve));
     assert.equal(calls.at(-1).method, 'detach');
+    assert.equal(page.listenerCount('close'), 0);
 });
 
-test('normal and maximized windows keep their state and CDP is detached on failure', async () => {
-    for (const state of ['normal', 'maximized', 'fullscreen']) {
-        const { page, calls } = fixture(state);
-        await ensureRendered(page);
-        assert.equal(calls.some(call => call.method === 'Browser.setWindowBounds'), false);
-    }
-    let detached = false;
-    const page = { isClosed: () => false, context: () => ({ newCDPSession: async () => ({
-        send: async () => { throw Error('Closed during check'); }, detach: async () => { detached = true; }
+test('a disconnected rendering session is recreated; failures detach and allow retry', async () => {
+    const { page, calls, sessions } = fixture();
+    await ensureRendered(page);
+    sessions[0].emit('close');
+    await ensureRendered(page);
+    assert.equal(sessions.length, 2);
+    assert.equal(calls.filter(call => call.method === 'Emulation.setFocusEmulationEnabled').length, 2);
+    let detached = 0, attempts = 0;
+    const failing = { isClosed: () => false, context: () => ({ newCDPSession: async () => ({
+        send: async () => { attempts++; throw Error('unsupported'); }, detach: async () => { detached++; }
     }) }) };
-    await assert.rejects(ensureRendered(page), /Closed during check/);
-    assert.equal(detached, true);
+    for (let i = 0; i < 2; i++) await assert.rejects(ensureRendered(failing), /手动取消最小化/);
+    assert.equal(detached, 2);
+    assert.equal(attempts, 2);
+    page.emit('close');
 });

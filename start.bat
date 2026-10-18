@@ -3,6 +3,21 @@ setlocal
 chcp 65001 >nul
 title UOOC Study
 cd /d "%~dp0"
+if defined UOOC_STUDY_HIDDEN goto prepare_hidden
+if "%~1"=="" goto hidden_gui
+if /i "%~1"=="--gui" if "%~2"=="" goto hidden_gui
+goto source
+
+:hidden_gui
+start "" wscript.exe "%~dp0start.vbs"
+exit /b 0
+
+:prepare_hidden
+if not exist "data" mkdir "data"
+call :source --gui >"data\bootstrap.log" 2>&1
+exit /b %errorlevel%
+
+:source
 if not exist "%~dp0app.js" goto use_exe
 where node >nul 2>nul
 if errorlevel 1 goto use_exe
@@ -24,7 +39,7 @@ goto finish
 
 :use_exe
 if not exist "%~dp0UOOC-Study.exe" goto need_node
-"%~dp0UOOC-Study.exe" %*
+start "" /wait "%~dp0UOOC-Study.exe" %*
 exit /b %errorlevel%
 
 :need_node
@@ -37,6 +52,7 @@ echo Dependency installation failed. Check your network and try again.
 set "result=1"
 
 :finish
+if defined UOOC_STUDY_HIDDEN exit /b %result%
 if "%~1"=="" exit /b %result%
 if /i "%~1"=="--gui" exit /b %result%
 if /i "%~1"=="--check" exit /b %result%

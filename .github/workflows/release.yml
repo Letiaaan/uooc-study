@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing version tag, for example v0.4.15'
+        description: 'Existing version tag, for example v0.4.16'
         required: true
         type: string
 
@@ -78,7 +78,7 @@ jobs:
           } else {
             npm run build:windows
           }
-      - run: .\UOOC-Study.exe --check
+      - run: node tools/check-launcher.js
       - name: Prepare notes and checksums
         shell: pwsh
         run: |

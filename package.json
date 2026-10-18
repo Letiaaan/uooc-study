@@ -1,6 +1,6 @@
 {
   "name": "uooc-study",
-  "version": "0.4.15",
+  "version": "0.4.16",
   "private": true,
   "description": "UOOC course navigator and study assistant for Windows",
   "license": "MIT",
@@ -13,7 +13,8 @@
     "test": "node --test --test-concurrency=1 test/*.test.js",
     "test:browsers": "node tools/test-browsers.js",
     "test:promotions": "node tools/test-promotions.js",
-    "build:windows": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/build.ps1"
+    "build:windows": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/build.ps1",
+    "test:minimized": "node tools/test-minimized.js"
   },
   "dependencies": {
     "@inquirer/prompts": "8.7.3",

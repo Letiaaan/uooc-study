@@ -19,7 +19,7 @@ jobs:
       - run: npm test
       - run: npm run check
       - run: npm run build:windows
-      - run: .\UOOC-Study.exe --check
+      - run: node tools/check-launcher.js
       - uses: actions/upload-artifact@v4
         with:
           name: UOOC-Study
