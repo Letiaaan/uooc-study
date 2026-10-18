@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing version tag, for example v0.4.13'
+        description: 'Existing version tag, for example v0.4.14'
         required: true
         type: string
 
@@ -48,7 +48,36 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run check
-      - run: npm run build:windows
+      - name: Import optional maintainer signing key
+        if: vars.ENABLE_SELF_SIGNING == 'true'
+        shell: pwsh
+        env:
+          SIGNING_PFX_BASE64: ${{ secrets.CODE_SIGNING_PFX_BASE64 }}
+          SIGNING_PFX_PASSWORD: ${{ secrets.CODE_SIGNING_PFX_PASSWORD }}
+        run: |
+          if (-not $env:SIGNING_PFX_BASE64 -or -not $env:SIGNING_PFX_PASSWORD) { throw 'Signing is enabled but its secrets are missing' }
+          $privateArchive = Join-Path $env:RUNNER_TEMP 'maintainer-signing.pfx'
+          try {
+            [IO.File]::WriteAllBytes($privateArchive,[Convert]::FromBase64String($env:SIGNING_PFX_BASE64))
+            $password = ConvertTo-SecureString $env:SIGNING_PFX_PASSWORD -AsPlainText -Force
+            $certificate = Import-PfxCertificate -FilePath $privateArchive -CertStoreLocation Cert:\CurrentUser\My -Password $password -Exportable
+            $expected = [Security.Cryptography.X509Certificates.X509Certificate2]::new((Join-Path $env:GITHUB_WORKSPACE 'CODE_SIGNING_CERT.cer'))
+            if ($certificate.Thumbprint -ne $expected.Thumbprint) { throw 'The private key does not match the published certificate' }
+            powershell -NoProfile -ExecutionPolicy Bypass -File tools/code-signing.ps1 -Action Initialize
+            if ($LASTEXITCODE -ne 0) { throw 'Signing identity initialization failed' }
+          } finally {
+            Remove-Item -LiteralPath $privateArchive -Force -ErrorAction SilentlyContinue
+          }
+      - name: Build download packages
+        shell: pwsh
+        env:
+          ENABLE_SELF_SIGNING: ${{ vars.ENABLE_SELF_SIGNING }}
+        run: |
+          if ($env:ENABLE_SELF_SIGNING -eq 'true') {
+            powershell -NoProfile -ExecutionPolicy Bypass -File tools/build.ps1 -SelfSign
+          } else {
+            npm run build:windows
+          }
       - run: .\UOOC-Study.exe --check
       - name: Prepare notes and checksums
         shell: pwsh

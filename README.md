@@ -4,11 +4,11 @@
 
 默认使用 **网页 AI → 豆包 → 访客 → 自动答题**，无需填写 API Key。千问、DeepSeek 网页需要先在官网登录；程序等待本人完成登录，再继续处理当前测验。
 
-当前版本 **0.4.13**，主要支持 **Windows 10 / 11 x64**。
+当前版本 **0.4.14**，主要支持 **Windows 10 / 11 x64**。
 
 [隐私政策 / Privacy Policy](PRIVACY.md) · [Code signing policy / 代码签名政策](CODE_SIGNING.md) · [安全报告 / Security Policy](SECURITY.md)
 
-**签名状态：已申请 SignPath Foundation，尚未获批或接入。当前启动器未签名。** Windows 提示与检查方法见代码签名政策，请保持系统安全防护开启。
+**签名状态：支持 Letiaaan 自签名，未经公共 CA 认证，Windows 不会默认信任。** SignPath 申请已被拒绝；不同下载包可能为自签名或未签名，以 Release 说明为准。指纹与验证方法见代码签名政策，请保持系统安全防护开启。
 
 ## 已实现的功能
 
@@ -215,7 +215,7 @@ BASE_URL=https://api.deepseek.com
 
 从 [GitHub Releases](https://github.com/Letiaaan/uooc-study/releases) 下载发布版本，功能变化见 [更新记录](CHANGELOG.md)。遇到使用问题，可在 [Issues](https://github.com/Letiaaan/uooc-study/issues) 提供版本、浏览器、复现步骤和脱敏后的错误信息；安全漏洞按 [安全政策](SECURITY.md) 私下报告。
 
-开发、测试、打包和 GitHub Desktop 同步方法见 [开发与发布指南](CONTRIBUTING.md)。版本标签触发自动测试和打包，生成 Release 草稿供维护者确认；当前签名申请尚在审核中。
+开发、测试、打包和 GitHub Desktop 同步方法见 [开发与发布指南](CONTRIBUTING.md)。版本标签触发自动测试和打包，生成 Release 草稿供维护者确认；自签名需要维护者明确配置，不会将私钥放入源码。
 
 ## 验证范围与使用规则
 

@@ -1,6 +1,6 @@
 # Privacy Policy / 隐私政策
 
-Last updated / 最后更新：2026-10-17。适用于 UOOC Study 0.4.13；后续数据处理变化会更新此文档。
+Last updated / 最后更新：2026-10-18。适用于 UOOC Study 0.4.14；后续数据处理变化会更新此文档。
 
 UOOC Study 是在用户电脑上运行的第三方学习工作台，由 [Letiaaan](https://github.com/Letiaaan) 维护。[项目源码](https://github.com/Letiaaan/uooc-study)按 MIT 许可证公开。本项目与 UOOC、豆包、千问及 DeepSeek 无隶属关系。
 
@@ -37,6 +37,8 @@ UOOC Study 是在用户电脑上运行的第三方学习工作台，由 [Letiaaa
 | 自定义 API | 以所配置接口运营者的政策为准 |
 
 需要人工登录或验证时，Windows 版本可弹出本机桌面提醒；用户点击“前往页面”后才调出相关页面。可在工作台关闭弹窗。提醒及后台窗口恢复通过程序自带的 PowerShell / Windows 窗口接口完成，不上传账号或题目，也不更改系统安全设置。
+
+可选的维护者签名 / 用户验签命令首次使用时下载官方 osslsigncode 工具，仅供本机操作；正常启动不下载签名工具。维护者私钥留在 Windows 当前用户证书库，公钥 CER 随源码分发。本地签名只在本机处理待签文件，临时私钥导出使用随机密码加密并清理；备份或将加密 PFX 配置为 GitHub Actions Secret 由维护者本人明确操作。指定外部时间戳服务时会向其发送时间戳请求，默认不请求时间戳。
 
 ## 保留、退出与删除
 

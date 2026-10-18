@@ -1,4 +1,4 @@
-﻿param([string]$NodeVersion = '24.14.1', [string]$NodeArchive = '')
+﻿param([string]$NodeVersion = '24.14.1', [string]$NodeArchive = '', [switch]$SelfSign)
 $ErrorActionPreference = 'Stop'
 $projectDir = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $projectDir
@@ -54,7 +54,7 @@ $noticePath = Join-Path $distDir 'THIRD-PARTY-NOTICES.txt'
 function Add-File($archive, [string]$file, [string]$relative) {
     [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, $file, $relative.Replace('\', '/'), [IO.Compression.CompressionLevel]::Optimal) | Out-Null
 }
-$sourceFiles = @('app.js', 'package.json', 'package-lock.json', 'config.example.txt', 'LICENSE', 'README.md', 'PRIVACY.md', 'CODE_SIGNING.md', 'SECURITY.md', 'CONTRIBUTING.md', 'CHANGELOG.md', '原理.md', '技术选型.md', '测试记录.md', '第三方声明.md', '.gitignore', 'start.bat')
+$sourceFiles = @('app.js', 'package.json', 'package-lock.json', 'config.example.txt', 'LICENSE', 'README.md', 'PRIVACY.md', 'CODE_SIGNING.md', 'CODE_SIGNING_CERT.cer', 'SECURITY.md', 'CONTRIBUTING.md', 'CHANGELOG.md', '原理.md', '技术选型.md', '测试记录.md', '第三方声明.md', '.gitignore', 'start.bat')
 $payloadPath = Join-Path $buildDir ('payload-' + [guid]::NewGuid().ToString('N') + '.zip')
 $archive = [IO.Compression.ZipFile]::Open($payloadPath, [IO.Compression.ZipArchiveMode]::Create)
 try {
@@ -64,6 +64,7 @@ try {
             Add-File $archive $_.FullName $_.FullName.Substring($projectDir.Length + 1)
         }
     }
+    Add-File $archive (Join-Path $PSScriptRoot 'code-signing.ps1') 'tools/code-signing.ps1'
     Get-ChildItem -LiteralPath (Join-Path $dependencies 'node_modules') -File -Recurse | ForEach-Object {
         Add-File $archive $_.FullName $_.FullName.Substring($dependencies.Length + 1)
     }
@@ -71,8 +72,33 @@ try {
     Add-File $archive $noticePath 'THIRD-PARTY-NOTICES.txt'
 } finally { $archive.Dispose() }
 $exePath = Join-Path $distDir 'UOOC-Study.exe'
-& $compiler /nologo /target:exe /platform:x64 /optimize+ "/out:$exePath" /reference:System.IO.Compression.dll /reference:System.IO.Compression.FileSystem.dll "/resource:$payloadPath,payload.zip" (Join-Path $PSScriptRoot 'Launcher.cs')
+$productVersion = ([IO.File]::ReadAllText((Join-Path $projectDir 'package.json')) | ConvertFrom-Json).version
+if ($productVersion -notmatch '^\d+\.\d+\.\d+$') { throw 'The product version must have three numeric components.' }
+$assemblyInfo = Join-Path $buildDir 'Launcher.AssemblyInfo.cs'
+$metadata = @"
+using System.Reflection;
+[assembly: AssemblyTitle("UOOC Study")]
+[assembly: AssemblyProduct("UOOC Study")]
+[assembly: AssemblyCompany("Letiaaan")]
+[assembly: AssemblyDescription("UOOC Study local learning workbench")]
+[assembly: AssemblyVersion("$productVersion.0")]
+[assembly: AssemblyFileVersion("$productVersion.0")]
+[assembly: AssemblyInformationalVersion("$productVersion")]
+"@
+[IO.File]::WriteAllText($assemblyInfo,$metadata,[Text.UTF8Encoding]::new($false))
+& $compiler /nologo /target:exe /platform:x64 /optimize+ "/out:$exePath" /reference:System.IO.Compression.dll /reference:System.IO.Compression.FileSystem.dll "/resource:$payloadPath,payload.zip" (Join-Path $PSScriptRoot 'Launcher.cs') $assemblyInfo
 if ($LASTEXITCODE -ne 0) { throw 'EXE compilation failed.' }
+$signingStatus = @{ type = 'unsigned' }
+if ($SelfSign) {
+    & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'code-signing.ps1') -Action Sign -Path $exePath
+    if ($LASTEXITCODE -ne 0) { throw 'Self-signing or verification failed; no release ZIP will be prepared.' }
+    $publicCertificate = [Security.Cryptography.X509Certificates.X509Certificate2]::new((Join-Path $projectDir 'CODE_SIGNING_CERT.cer'))
+    $certificateHash = [Security.Cryptography.SHA256]::Create()
+    try { $fingerprint = [BitConverter]::ToString($certificateHash.ComputeHash($publicCertificate.RawData)).Replace('-','') }
+    finally { $certificateHash.Dispose(); $publicCertificate.Dispose() }
+    $signingStatus = @{ type = 'self-signed'; certificateSha256 = $fingerprint; windowsStatus = (Get-AuthenticodeSignature -LiteralPath $exePath).Status.ToString() }
+}
+[IO.File]::WriteAllText((Join-Path $buildDir 'signing-status.json'),($signingStatus | ConvertTo-Json),[Text.UTF8Encoding]::new($false))
 try { Copy-Item -LiteralPath $exePath -Destination (Join-Path $projectDir 'UOOC-Study.exe') -ErrorAction Stop }
 catch {
     $version = ([IO.File]::ReadAllText((Join-Path $projectDir 'package.json')) | ConvertFrom-Json).version
@@ -88,7 +114,8 @@ foreach ($kind in @('windows-x64', 'source', 'complete-windows-x64')) {
     try {
         if ($kind -eq 'windows-x64') {
             Add-File $release $exePath 'UOOC-Study.exe'
-            foreach ($file in @('start.bat', 'config.example.txt', 'README.md', 'PRIVACY.md', 'CODE_SIGNING.md', 'SECURITY.md', 'CHANGELOG.md', '原理.md', '技术选型.md', '测试记录.md', '第三方声明.md', 'LICENSE')) {
+            Add-File $release (Join-Path $PSScriptRoot 'code-signing.ps1') 'tools/code-signing.ps1'
+            foreach ($file in @('start.bat', 'config.example.txt', 'README.md', 'PRIVACY.md', 'CODE_SIGNING.md', 'CODE_SIGNING_CERT.cer', 'SECURITY.md', 'CHANGELOG.md', '原理.md', '技术选型.md', '测试记录.md', '第三方声明.md', 'LICENSE')) {
                 Add-File $release (Join-Path $projectDir $file) $file
             }
             Add-File $release $noticePath 'THIRD-PARTY-NOTICES.txt'

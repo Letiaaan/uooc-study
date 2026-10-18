@@ -11,5 +11,8 @@
 *.exe
 *.log
 *.zip
+*.pfx
+*.p12
+*.key
 Thumbs.db
 .DS_Store
