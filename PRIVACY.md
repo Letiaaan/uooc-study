@@ -1,6 +1,6 @@
 # Privacy Policy / 隐私政策
 
-Last updated / 最后更新：2026-10-18。适用于 UOOC Study 0.4.14；后续数据处理变化会更新此文档。
+Last updated / 最后更新：2026-10-18。适用于 UOOC Study 0.4.15；后续数据处理变化会更新此文档。
 
 UOOC Study 是在用户电脑上运行的第三方学习工作台，由 [Letiaaan](https://github.com/Letiaaan) 维护。[项目源码](https://github.com/Letiaaan/uooc-study)按 MIT 许可证公开。本项目与 UOOC、豆包、千问及 DeepSeek 无隶属关系。
 

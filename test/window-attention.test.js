@@ -9,7 +9,7 @@ function fixture() {
         start: (exe, args, options) => {
             assert.ok(args.includes('-NonInteractive'));
             assert.equal(options.windowsHide, true);
-            const child = Object.assign(new EventEmitter(), { stdout: new EventEmitter(), killed: false,
+            const child = Object.assign(new EventEmitter(), { stdout: new EventEmitter(), arguments: args, killed: false,
                 kill() { this.killed = true; } });
             children.push(child);
             return child;
@@ -29,6 +29,15 @@ test('disabled verification reminders stay pending without a native popup; toggl
     children[0].stdout.emit('data', 'open\r\n');
     children[0].emit('exit', 0);
     assert.deepEqual(opened, ['pending']);
+});
+
+test('video questions and quiz review prompts do not use the account-login message', () => {
+    const { notice, children } = fixture();
+    notice.update({id:'video',kind:'video-question'},true);
+    assert.equal(children[0].arguments.at(-1),'video');
+    notice.update({id:'review',kind:'quiz-review'},true);
+    assert.equal(children[1].arguments.at(-1),'quiz');
+    notice.close();
 });
 
 test('late native replies cannot open cleared or disabled verification pages', () => {

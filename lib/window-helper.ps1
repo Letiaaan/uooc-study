@@ -1,7 +1,7 @@
 ﻿param(
     [Parameter(Mandatory=$true)][ValidateSet('restore','notice')][string]$Action,
     [uint32]$BrowserProcessId = 0,
-    [ValidateSet('login','credentials','quiz')][string]$Reason = 'login'
+    [ValidateSet('login','credentials','quiz','video')][string]$Reason = 'login'
 )
 $ErrorActionPreference = 'Stop'
 if ($Action -eq 'restore') {
@@ -52,6 +52,7 @@ $label.Size = New-Object System.Drawing.Size(412, 115)
 $label.Text = switch ($Reason) {
     'credentials' { '请在 UOOC 官网完成登录。工作台没有提供完整的账号密码，需要你在官网补充。' }
     'quiz' { '测验需要人工验证或确认。点击“前往页面”处理，完成后程序会自动继续提交。' }
+    'video' { '视频内题目需要本人处理。点击“前往页面”在当前视频中完成作答，程序会等待并自动继续播放。无需重新输入账号密码。' }
     default { '自动登录需要人工处理。账号密码已由程序填写，请前往 UOOC 页面完成验证或核对官网提示。' }
 }
 $label.Text += "`r`n`r`n如需安静运行，可在工作台关闭验证提醒。"

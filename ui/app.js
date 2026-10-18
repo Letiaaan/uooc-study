@@ -216,6 +216,9 @@ function render(next) {
     $('live-dot').classList.toggle('running', next.busy && !next.paused);
     $('verification').hidden = !next.verification;
     $('verification-text').textContent = next.verification?.message || '';
+    const videoQuestion = next.verification?.kind === 'video-question';
+    $('verification-title').textContent = videoQuestion ? '视频题目等待处理' : next.verification?.kind === 'quiz-review' ? '测验结果等待核对' : '等待官网验证';
+    $('show-verification').textContent = videoQuestion ? '前往视频题目' : '前往验证页面';
     const platform = webPlatforms[next.settings.webPlatform] || webPlatforms.doubao;
     const waitingLogin = Boolean(next.settings.provider === 'web' && next.web?.needsAction && /完成登录|请.*登录|登录入口已打开/.test(next.web?.note || ''));
     $('ai-login-alert').hidden = !waitingLogin;
