@@ -4,10 +4,10 @@ const { createHash } = require('node:crypto');
 const { parseArgs } = require('node:util');
 
 const assets = ['UOOC-Study-complete-windows-x64.zip', 'UOOC-Study-windows-x64.zip',
-    'UOOC-Study-source.zip', 'THIRD-PARTY-NOTICES.txt'];
+    'UOOC-Study-source.zip', 'UOOC-Study.exe', 'THIRD-PARTY-NOTICES.txt'];
 
 function validateTag(tag, version) {
-    if (!/^v\d+\.\d+\.\d+$/.test(tag || '')) throw new Error('版本标签必须形如 v0.4.16');
+    if (!/^v\d+\.\d+\.\d+$/.test(tag || '')) throw new Error('版本标签必须形如 v0.4.17');
     if (tag !== `v${version}`) throw new Error('版本标签必须与 package.json 的 version 一致');
     return tag;
 }
@@ -28,6 +28,8 @@ function releaseNotes({ tag, version, commit, repository, changelog, signing = {
     return `## 更新内容\n\n${changes}\n\n## 下载\n\n` +
         '- 首次使用推荐 **UOOC-Study-complete-windows-x64.zip**，完整解压后启动 EXE 或 BAT。\n' +
         '- **UOOC-Study-windows-x64.zip** 为较小运行包；**UOOC-Study-source.zip** 为纯源码。\n' +
+        '- **UOOC-Study.exe** 是同版本独立启动器，内置运行依赖；更新已有目录时替换同名 EXE，配置和登录数据保留。\n' +
+        '- 只更新 EXE 后请直接运行 EXE；完整包的 BAT 优先运行旁边的源码，整包升级请解压到新目录，避免版本混用。\n' +
         '- **SHA256SUMS.txt** 用于核对附件完整性；文件哈希不等于发布者签名。\n\n' +
         `${signatureNote}\n\n` +
         `[使用说明](${source}/README.md) · [隐私政策](${source}/PRIVACY.md) · ` +

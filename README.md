@@ -4,7 +4,7 @@
 
 默认使用 **网页 AI → 豆包 → 访客 → 自动答题**，无需填写 API Key。千问、DeepSeek 网页需要先在官网登录；程序等待本人完成登录，再继续处理当前测验。
 
-当前版本 **0.4.16**，主要支持 **Windows 10 / 11 x64**。
+当前版本 **0.4.17**，主要支持 **Windows 10 / 11 x64**。
 
 [隐私政策 / Privacy Policy](PRIVACY.md) · [Code signing policy / 代码签名政策](CODE_SIGNING.md) · [安全报告 / Security Policy](SECURITY.md)
 
@@ -46,6 +46,8 @@ EXE 内置 Node.js 和依赖，**无需另装 Node.js、Python 或模型环境**
 完整包同时包含 `app.js`、`lib/`、`ui/`、`test/`、`tools/`、`.github/`、全部文档、BAT、EXE、完整 `node_modules/` 及官方 Node.js 运行时 `runtime/`。仅排除个人配置、登录数据、构建缓存和历史程序。解压后可直接运行，也可用 `runtime\node.exe app.js` 启动包内源码。
 
 `UOOC-Study-windows-x64.zip` 是较小的运行包，源码和依赖封装在 EXE 内，不展开源码目录；`UOOC-Study-source.zip` 用于源码仓库，不包含运行依赖。需要文件齐全的目录请选择完整包。
+
+Release 还提供独立的 `UOOC-Study.exe`，与两种 Windows 包中的启动器完全一致。只替换 EXE 时，请直接双击新 EXE 使用；完整包里的 BAT 优先运行旁边的源码，只换 EXE 不会更新 BAT 使用的源码。推荐将新版完整包解压到新目录，确认版本后再按需迁移自己的 `config.txt` 和 `data/`，不要混用不同版本的文件。
 
 程序优先使用本机 Chrome / Edge；两者均不可用时尝试联网下载 Playwright Chromium。建议提前安装 Chrome 或 Edge。
 

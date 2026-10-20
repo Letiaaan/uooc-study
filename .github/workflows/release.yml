@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing version tag, for example v0.4.16'
+        description: 'Existing version tag, for example v0.4.17'
         required: true
         type: string
 
@@ -90,6 +90,7 @@ jobs:
           if-no-files-found: error
           path: |
             dist/*.zip
+            dist/UOOC-Study.exe
             dist/SHA256SUMS.txt
             dist/THIRD-PARTY-NOTICES.txt
             .build/release-notes.md
@@ -114,6 +115,6 @@ jobs:
           set -euo pipefail
           (cd dist && sha256sum --check SHA256SUMS.txt)
           gh release create "$RELEASE_TAG" \
-            dist/*.zip dist/SHA256SUMS.txt dist/THIRD-PARTY-NOTICES.txt \
+            dist/*.zip dist/UOOC-Study.exe dist/SHA256SUMS.txt dist/THIRD-PARTY-NOTICES.txt \
             --verify-tag --draft --title "UOOC Study $RELEASE_TAG" \
             --notes-file .build/release-notes.md

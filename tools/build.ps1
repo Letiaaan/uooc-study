@@ -140,4 +140,5 @@ foreach ($kind in @('windows-x64', 'source', 'complete-windows-x64')) {
     } finally { $release.Dispose(); $releaseStream.Dispose() }
     Write-Host "Built $zipPath"
 }
+& (Join-Path $PSScriptRoot 'check-packages.ps1') -Directory $distDir
 Write-Host "Built $exePath"

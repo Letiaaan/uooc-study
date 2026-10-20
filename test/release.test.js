@@ -37,6 +37,7 @@ test('the distributed certificate is a self-signed public code-signing certifica
 });
 
 test('release notes bind the version and commit; checksums cover every attachment', t => {
+    assert.ok(assets.includes('UOOC-Study.exe'), 'The standalone launcher must be included in the release and checksum manifest');
     const root = fs.mkdtempSync(path.join(os.tmpdir(),'uooc-release-'));
     t.after(() => fs.rmSync(root, { recursive: true, force: true }));
     fs.mkdirSync(path.join(root,'dist'));
@@ -47,6 +48,7 @@ test('release notes bind the version and commit; checksums cover every attachmen
     prepare(options);
     const notes = fs.readFileSync(path.join(root,'.build','release-notes.md'),'utf8');
     assert.match(notes, /Current change/);
+    assert.match(notes, /\*\*UOOC-Study\.exe\*\*/);
     assert.doesNotMatch(notes, /Old change/);
     assert.ok(notes.includes(options.commit));
     assert.match(notes, /启动器未签名/);

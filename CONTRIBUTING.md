@@ -26,6 +26,8 @@ npm run build:windows
 
 Windows 构建使用系统 .NET Framework C# 编译器，下载官方 Node.js 并核对 SHA256。输出在 `dist/`：完整 Windows 包、较小运行包、纯源码包、启动器及第三方许可。完整包保留全部源码、开发与生产依赖和 Node.js 运行时；实际配置与 `data/` 不进入包。
 
+构建结束自动执行 `tools/check-packages.ps1`，检查 Windows ZIP 内的 EXE 与独立 EXE 的 SHA256 一致、源码版本一致、视频弹题及窗口模块未过期，同时检查启动脚本和私人文件排除。Release 附件包含三种 ZIP、独立 EXE、许可及统一 SHA256 清单。更新运行目录时，注意 BAT 优先运行源码；只换 EXE 后应直接运行 EXE，完整升级应使用同一版本整包。
+
 ## 提交更新
 
 1. 在 GitHub Desktop 克隆仓库；已有克隆时，先 Fetch / Pull 取得远端更新。
@@ -40,15 +42,15 @@ Windows 构建使用系统 .NET Framework C# 编译器，下载官方 Node.js �
 版本发布由 [Prepare release draft](.github/workflows/release.yml) 处理：
 
 1. 更新 `package.json` 和 `package-lock.json` 中的版本，更新 [CHANGELOG](CHANGELOG.md)，并核对政策、签名状态和文档。
-2. 提交并推送源码，在该提交上创建与版本完全一致的标签，例如 `v0.4.16`，然后推送标签。
+2. 提交并推送源码，在该提交上创建与版本完全一致的标签，例如 `v0.4.17`，然后推送标签。
 3. Actions 校验标签与源码版本，执行测试及打包；生成 SHA256 清单，在单独的发布任务中校验附件，再创建 Release **草稿**。
 4. 到 GitHub Releases 打开草稿，核对源码提交、说明和附件，试用下载包后点击 **Publish release**。
 
 GitHub Desktop 可在 History 中右键要发布的提交创建标签，再推送到 origin。也可在仓库终端执行：
 
 ```powershell
-git tag v0.4.16
-git push origin v0.4.16
+git tag v0.4.17
+git push origin v0.4.17
 ```
 
 不要在错误的提交上打标签。流程也支持在 Actions 手动运行并填写**已存在的版本标签**。重复运行同一标签时，若已有同名 Release，创建步骤会失败，不覆盖已发布附件；请先核对已有版本。
