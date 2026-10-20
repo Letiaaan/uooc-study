@@ -4,7 +4,7 @@
 
 默认使用 **网页 AI → 豆包 → 访客 → 自动答题**，无需填写 API Key。千问、DeepSeek 网页需要先在官网登录；程序等待本人完成登录，再继续处理当前测验。
 
-当前版本 **0.4.17**，主要支持 **Windows 10 / 11 x64**。
+当前版本 **0.4.18**，主要支持 **Windows 10 / 11 x64**。
 
 [隐私政策 / Privacy Policy](PRIVACY.md) · [Code signing policy / 代码签名政策](CODE_SIGNING.md) · [安全报告 / Security Policy](SECURITY.md)
 

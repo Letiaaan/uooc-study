@@ -42,15 +42,15 @@ Windows 构建使用系统 .NET Framework C# 编译器，下载官方 Node.js �
 版本发布由 [Prepare release draft](.github/workflows/release.yml) 处理：
 
 1. 更新 `package.json` 和 `package-lock.json` 中的版本，更新 [CHANGELOG](CHANGELOG.md)，并核对政策、签名状态和文档。
-2. 提交并推送源码，在该提交上创建与版本完全一致的标签，例如 `v0.4.17`，然后推送标签。
+2. 提交并推送源码，在该提交上创建与版本完全一致的标签，例如 `v0.4.18`，然后推送标签。
 3. Actions 校验标签与源码版本，执行测试及打包；生成 SHA256 清单，在单独的发布任务中校验附件，再创建 Release **草稿**。
 4. 到 GitHub Releases 打开草稿，核对源码提交、说明和附件，试用下载包后点击 **Publish release**。
 
 GitHub Desktop 可在 History 中右键要发布的提交创建标签，再推送到 origin。也可在仓库终端执行：
 
 ```powershell
-git tag v0.4.17
-git push origin v0.4.17
+git tag v0.4.18
+git push origin v0.4.18
 ```
 
 不要在错误的提交上打标签。流程也支持在 Actions 手动运行并填写**已存在的版本标签**。重复运行同一标签时，若已有同名 Release，创建步骤会失败，不覆盖已发布附件；请先核对已有版本。

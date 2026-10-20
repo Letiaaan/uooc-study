@@ -7,7 +7,7 @@ const assets = ['UOOC-Study-complete-windows-x64.zip', 'UOOC-Study-windows-x64.z
     'UOOC-Study-source.zip', 'UOOC-Study.exe', 'THIRD-PARTY-NOTICES.txt'];
 
 function validateTag(tag, version) {
-    if (!/^v\d+\.\d+\.\d+$/.test(tag || '')) throw new Error('版本标签必须形如 v0.4.17');
+    if (!/^v\d+\.\d+\.\d+$/.test(tag || '')) throw new Error('版本标签必须形如 v0.4.18');
     if (tag !== `v${version}`) throw new Error('版本标签必须与 package.json 的 version 一致');
     return tag;
 }

@@ -3,14 +3,18 @@ $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $projectDirectory = Split-Path -Parent $PSScriptRoot
 $version = ([IO.File]::ReadAllText((Join-Path $projectDirectory 'package.json')) | ConvertFrom-Json).version
-$launcherHash = (Get-FileHash -LiteralPath (Join-Path $Directory 'UOOC-Study.exe') -Algorithm SHA256).Hash
-
-function Entry-Hash($entry) {
-    $stream = $entry.Open()
+function Stream-Hash($stream) {
     $hash = [Security.Cryptography.SHA256]::Create()
     try { return [BitConverter]::ToString($hash.ComputeHash($stream)).Replace('-', '') }
     finally { $hash.Dispose(); $stream.Dispose() }
 }
+
+function Entry-Hash($entry) { return Stream-Hash ($entry.Open()) }
+function File-Hash([string]$file) { return Stream-Hash ([IO.File]::OpenRead($file)) }
+
+# Windows PowerShell started by a PowerShell 7 CI step may not discover the
+# Get-FileHash function. Hash streams directly without relying on module loading.
+$launcherHash = File-Hash (Join-Path $Directory 'UOOC-Study.exe')
 
 foreach ($kind in @('windows-x64', 'complete-windows-x64', 'source')) {
     $file = Join-Path $Directory "UOOC-Study-$kind.zip"
@@ -36,7 +40,7 @@ foreach ($kind in @('windows-x64', 'complete-windows-x64', 'source')) {
             if ($packagedVersion -ne $version) { throw "Stale source version in $kind package." }
             foreach ($name in @('app.js', 'lib/video-prompt.js', 'lib/window-rendering.js', 'start.bat', 'start.vbs')) {
                 $entry = $zip.GetEntry($name)
-                if (-not $entry -or (Entry-Hash $entry) -ne (Get-FileHash -LiteralPath (Join-Path $projectDirectory $name) -Algorithm SHA256).Hash) {
+                if (-not $entry -or (Entry-Hash $entry) -ne (File-Hash (Join-Path $projectDirectory $name))) {
                     throw "Stale or missing $name in $kind package."
                 }
             }
