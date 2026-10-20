@@ -5,6 +5,57 @@ const path = require('node:path');
 process.env.UOOC_STUDY_HOME = path.join(__dirname, '..', '.build', 'worker-fixture');
 const { startWorker } = require('../lib/worker');
 
+test('stop keeps the login context and cached courses, then runs a different selection without reconnecting', { timeout: 5000 }, async () => {
+    const channel = new EventEmitter(), events = new EventEmitter();
+    const messages = [], aggregate = {}, pages = [];
+    let closes = 0, logins = 0, reads = 0, releaseRun;
+    channel.connected = true;
+    channel.send = message => { messages.push(message); if (message.type === 'state') Object.assign(aggregate, message.value); events.emit('output', message); };
+    const wait = predicate => messages.find(predicate) || new Promise(resolve => {
+        const receive = message => { if (predicate(message)) { events.off('output', receive); resolve(message); } };
+        events.on('output', receive);
+    });
+    const makePage = () => {
+        const page = Object.assign(new EventEmitter(), { closed: false, isClosed() { return this.closed; }, setDefaultTimeout() {},
+            close: async () => { page.closed = true; if (releaseRun) { const release = releaseRun; releaseRun = null; release(); } },
+            locator: () => ({ evaluateAll: async () => {} }) });
+        pages.push(page); return page;
+    };
+    const original = makePage();
+    const context = Object.assign(new EventEmitter(), { pages: () => pages.filter(page => !page.closed), newPage: async () => makePage(),
+        close: async () => { closes++; context.emit('close'); } });
+    const config = { browser: 'chrome', provider: 'web', webPlatform: 'doubao' };
+    const runs = [];
+    startWorker({ channel, open: async () => context, login: async () => { logins++; },
+        readCourses: async () => { reads++; return [{ id: '1', title: 'First' }, { id: '2', title: 'Second' }]; },
+        createWebChat: () => ({ close: async () => {} }), createNotice: () => ({ update() {} }),
+        run: async (page, course, mode, { control }) => {
+            runs.push({ page, id: course.id });
+            if (course.id === '1') { await new Promise(resolve => { releaseRun = resolve; }); await control.checkpoint(); }
+            return [];
+        }
+    });
+    channel.emit('message', { type: 'connect', config });
+    await wait(message => message.type === 'state' && message.value.busy === false);
+    channel.emit('message', { type: 'run', config, ids: ['1'], mode: 'video' });
+    await new Promise(resolve => setImmediate(resolve));
+    channel.emit('message', { type: 'stop' });
+    await wait(message => message.type === 'state' && message.value.phase === '已停止，可重新选课并开始');
+    assert.equal(closes, 0);
+    assert.equal(original.closed, true);
+    assert.equal(aggregate.connected, true);
+    assert.equal(aggregate.busy, false);
+    assert.equal(aggregate.courses.length, 2);
+    channel.emit('message', { type: 'run', config, ids: ['2'], mode: 'quiz' });
+    await wait(message => message.type === 'state' && message.value.phase === '本轮处理结束');
+    assert.equal(runs[1].id, '2');
+    assert.notEqual(runs[1].page, original);
+    assert.equal(logins, 1); assert.equal(reads, 1);
+    channel.emit('disconnect');
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(closes, 1);
+});
+
 test('web collaboration carries a complete paper through IPC and resumes with validated selections', async () => {
     const channel = new EventEmitter();
     const events = new EventEmitter();

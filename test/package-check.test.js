@@ -22,7 +22,7 @@ test('Windows package verification works without Get-FileHash and still rejects 
             $zip = [IO.Compression.ZipArchive]::new($stream, [IO.Compression.ZipArchiveMode]::Create)
             try {
                 $names = @('start.bat', 'start.vbs')
-                if ($kind -ne 'windows-x64') { $names += @('package.json', 'app.js', 'lib/video-prompt.js', 'lib/window-rendering.js') }
+                if ($kind -ne 'windows-x64') { $names += @('package.json', 'app.js', 'lib/video-prompt.js', 'lib/window-rendering.js', 'lib/gui.js', 'lib/gui-open.js', 'lib/gui-instance.js', 'lib/gui-lifecycle.js', 'lib/worker.js') }
                 foreach ($name in $names) { [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, (Join-Path $project $name), $name) | Out-Null }
                 if ($kind -ne 'source') { [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, (Join-Path $fixture 'UOOC-Study.exe'), 'UOOC-Study.exe') | Out-Null }
             } finally { $zip.Dispose(); $stream.Dispose() }

@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using System.Threading;
 
 internal static class Launcher
 {
@@ -15,6 +16,49 @@ internal static class Launcher
     [DllImport("kernel32.dll")] private static extern IntPtr GetStdHandle(int handle);
     [DllImport("kernel32.dll")] private static extern uint GetFileType(IntPtr handle);
     private static readonly object logLock = new object();
+
+    private static StreamWriter OpenLog(string directory)
+    {
+        Directory.CreateDirectory(directory);
+        FileStream stream;
+        try { stream = new FileStream(Path.Combine(directory, "startup.log"), FileMode.Append, FileAccess.Write, FileShare.ReadWrite); }
+        catch (IOException) {
+            // An older running launcher may still hold startup.log exclusively.
+            // Let Node reopen its workbench instead of failing on that log lock.
+            stream = new FileStream(Path.Combine(directory, "startup-" + Process.GetCurrentProcess().Id + ".log"), FileMode.Create, FileAccess.Write, FileShare.Read);
+        }
+        StreamWriter writer = new StreamWriter(stream, new UTF8Encoding(false));
+        writer.AutoFlush = true;
+        return writer;
+    }
+
+    private static void PrepareRuntime(string runtime, string hash)
+    {
+        using (Mutex gate = new Mutex(false, "Local\\UOOC-Study-runtime-" + hash))
+        {
+            bool acquired = false;
+            try
+            {
+                try { acquired = gate.WaitOne(60000); } catch (AbandonedMutexException) { acquired = true; }
+                if (!acquired) throw new IOException("另一个启动器正在准备运行环境，请稍后重试。");
+                if (File.Exists(Path.Combine(runtime, ".ready"))) return;
+                Directory.CreateDirectory(runtime);
+                using (Stream payload = Assembly.GetExecutingAssembly().GetManifestResourceStream("payload.zip"))
+                using (ZipArchive archive = new ZipArchive(payload, ZipArchiveMode.Read))
+                {
+                    foreach (ZipArchiveEntry entry in archive.Entries)
+                    {
+                        string target = Path.GetFullPath(Path.Combine(runtime, entry.FullName));
+                        if (!target.StartsWith(runtime + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Invalid runtime entry.");
+                        Directory.CreateDirectory(Path.GetDirectoryName(target));
+                        entry.ExtractToFile(target, true);
+                    }
+                }
+                File.WriteAllText(Path.Combine(runtime, ".ready"), hash);
+            }
+            finally { if (acquired) gate.ReleaseMutex(); }
+        }
+    }
 
     private static void Record(StreamWriter log, string line, bool error)
     {
@@ -46,7 +90,7 @@ internal static class Launcher
     {
         bool quiet = Array.IndexOf(args, "--check") >= 0 || Array.IndexOf(args, "--help") >= 0 || Array.IndexOf(args, "-h") >= 0;
         bool gui = Array.IndexOf(args, "--gui") >= 0 || !(Array.IndexOf(args, "--cli") >= 0 || Array.IndexOf(args, "--inspect") >= 0 || Array.IndexOf(args, "--logout") >= 0 || Array.Exists(args, a => a == "--mode" || a.StartsWith("--mode=") || a == "--courses" || a.StartsWith("--courses=")));
-        bool hidden = gui && !quiet && Array.IndexOf(args, "--no-open") < 0;
+        bool hidden = gui && !quiet;
         uint inheritedOutputType = GetFileType(GetStdHandle(-11));
         bool capture = hidden || quiet || Array.IndexOf(args, "--no-open") >= 0 || inheritedOutputType == 1 || inheritedOutputType == 3;
         if (!hidden)
@@ -71,10 +115,7 @@ internal static class Launcher
             string home = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             if (hidden)
             {
-                string logDirectory = Path.Combine(home, "data");
-                Directory.CreateDirectory(logDirectory);
-                log = new StreamWriter(Path.Combine(logDirectory, "startup.log"), false, new UTF8Encoding(false));
-                log.AutoFlush = true;
+                log = OpenLog(Path.Combine(home, "data"));
             }
             string cache = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "UOOC-Study", "runtime");
             string hash;
@@ -82,24 +123,7 @@ internal static class Launcher
             using (SHA256 sha = SHA256.Create())
                 hash = BitConverter.ToString(sha.ComputeHash(payload)).Replace("-", "").Substring(0, 16);
             string runtime = Path.Combine(cache, hash);
-            if (!File.Exists(Path.Combine(runtime, ".ready")))
-            {
-                if (!hidden) Console.WriteLine("Preparing UOOC Study runtime...");
-                Directory.CreateDirectory(runtime);
-                using (Stream payload = Assembly.GetExecutingAssembly().GetManifestResourceStream("payload.zip"))
-                using (ZipArchive archive = new ZipArchive(payload, ZipArchiveMode.Read))
-                {
-                    foreach (ZipArchiveEntry entry in archive.Entries)
-                    {
-                        string target = Path.GetFullPath(Path.Combine(runtime, entry.FullName));
-                        if (!target.StartsWith(runtime + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-                            throw new InvalidDataException("Invalid runtime entry.");
-                        Directory.CreateDirectory(Path.GetDirectoryName(target));
-                        entry.ExtractToFile(target, true);
-                    }
-                }
-                File.WriteAllText(Path.Combine(runtime, ".ready"), hash);
-            }
+            PrepareRuntime(runtime, hash);
             StringBuilder arguments = new StringBuilder(Quote(Path.Combine(runtime, "app.js")));
             foreach (string argument in args) arguments.Append(' ').Append(Quote(argument));
             ProcessStartInfo start = new ProcessStartInfo

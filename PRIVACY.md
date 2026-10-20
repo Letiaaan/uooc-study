@@ -1,6 +1,6 @@
 # Privacy Policy / 隐私政策
 
-Last updated / 最后更新：2026-10-20。适用于 UOOC Study 0.4.18；后续数据处理变化会更新此文档。
+Last updated / 最后更新：2026-10-20。适用于 UOOC Study 0.4.19；后续数据处理变化会更新此文档。
 
 UOOC Study 是在用户电脑上运行的第三方学习工作台，由 [Letiaaan](https://github.com/Letiaaan) 维护。[项目源码](https://github.com/Letiaaan/uooc-study)按 MIT 许可证公开。本项目与 UOOC、豆包、千问及 DeepSeek 无隶属关系。
 
@@ -12,7 +12,8 @@ UOOC Study 是在用户电脑上运行的第三方学习工作台，由 [Letiaaa
 | AI API 密钥、接口地址、模型设置 | 向用户配置的接口请求答案或测试连接。工作台输入不自动写回配置；配置文件和环境变量也可提供密钥 |
 | Cookie 与登录会话 | UOOC 专用浏览器档案位于 `data/browser-profile*`，AI 档案位于 `data/ai-profiles/`；保存登录状态，退出程序后通常仍保留 |
 | 课程与运行记录 | `data/` 下保存课程标识、处理进度和诊断记录；`data/runtime.log` 记录运行事件 |
-| 隐藏启动日志 | `data/startup.log`（EXE）及 `data/bootstrap.log`（BAT）保存本次启动输出，可能含本机工作台访问地址与令牌；仅用于本机排错，不应公开分享 |
+| 隐藏启动日志 | `data/startup*.log`（EXE）及 `data/bootstrap*.log`（BAT）保存启动输出，可能含本机工作台访问地址与令牌；仅用于本机排错，不应公开分享 |
+| 工作台实例记录 | `data/gui-instance.json` 临时记录本机地址、访问令牌、进程号和实例标识，用于重复启动时复用工作台；正常退出删除，异常退出后检查过期记录，不对外发送 |
 | 临时答案 | `data/temp-answers/quiz-*/` 下的 `reply.txt`、`answers.txt`、`paper.json` 保存 AI 原回复、规范答案、测验标识与题号，供回读和结果核对 |
 | 工作台偏好与访问令牌 | 主题保存在浏览器 localStorage；本次本机工作台的访问令牌保存在 sessionStorage |
 | 运行环境 | EXE 将运行时解压到 `%LOCALAPPDATA%\UOOC-Study\runtime`；完整包另含程序目录下的 `runtime/` 和依赖 |
@@ -45,7 +46,7 @@ UOOC Study 是在用户电脑上运行的第三方学习工作台，由 [Letiaaa
 
 确认测验通过后，程序仅清理标识匹配且目录结构符合预期的本卷临时答案。失败、结果不明或安全校验未通过时保留供核对；其他记录、配置和登录档案不会随退出自动清空，没有统一的自动到期删除期限。
 
-可以停止任务，或使用“退出账号”清除当前 UOOC 浏览器会话的 Cookie 和网页存储。此操作不代表退出 AI 官网账号，也不删除第三方服务端数据。AI 登录退出和聊天记录删除请在对应官网操作。
+停止任务会保留 UOOC 浏览器会话和已读取的课程列表，方便重新选课；退出程序关闭所属浏览器。关闭最后一个工作台标签页后约 0.5 秒开始退出，F12 在工作台页面内生效。工作台使用本机长连接识别页面是否仍打开，该连接不发送课程、密码或密钥到外部服务器。使用“退出账号”可清除当前 UOOC 浏览器会话的 Cookie 和网页存储；此操作不代表退出 AI 官网账号，也不删除第三方服务端数据。AI 登录退出和聊天记录删除请在对应官网操作。
 
 卸载或清除本地数据时：
 

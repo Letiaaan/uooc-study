@@ -14,7 +14,8 @@ exit /b 0
 
 :prepare_hidden
 if not exist "data" mkdir "data"
-call :source --gui >"data\bootstrap.log" 2>&1
+if not defined UOOC_STUDY_BOOT_LOG set "UOOC_STUDY_BOOT_LOG=bootstrap-%RANDOM%-%RANDOM%.log"
+call :source --gui >"data\%UOOC_STUDY_BOOT_LOG%" 2>&1
 exit /b %errorlevel%
 
 :source

@@ -25,6 +25,38 @@ for (const input of document.querySelectorAll('input[name=provider],#web-platfor
 let state, initialized = false, courseSignature = '', lastLog = 0, pendingId = '', lastError = '', offline = false, testing = false, savingReminder = false;
 let token = new URLSearchParams(location.hash.slice(1)).get('token') || sessionStorage.getItem('uooc-token') || '';
 if (token) { sessionStorage.setItem('uooc-token', token); history.replaceState(null, '', location.pathname); }
+let quitting = false, sessionAbort, sessionGeneration = 0;
+async function connectSession() {
+    const generation = ++sessionGeneration;
+    sessionAbort?.abort();
+    while (!quitting && generation === sessionGeneration) {
+        sessionAbort = new AbortController();
+        try {
+            const response = await fetch('/api/session', { headers: { Authorization: `Bearer ${token}` }, signal: sessionAbort.signal });
+            if (!response.ok) return;
+            const reader = response.body.getReader();
+            while (!quitting && generation === sessionGeneration && !(await reader.read()).done) {}
+        } catch {}
+        if (!quitting && generation === sessionGeneration) await new Promise(resolve => setTimeout(resolve, 500));
+    }
+}
+window.addEventListener('pagehide', () => { quitting = true; sessionGeneration++; sessionAbort?.abort(); });
+window.addEventListener('pageshow', event => { if (event.persisted) { quitting = false; void connectSession(); } });
+if (token) void connectSession();
+async function quitProgram() {
+    if (quitting) return;
+    quitting = true;
+    try {
+        await api('shutdown', {});
+        stopped = true;
+        sessionAbort?.abort();
+        notice('程序已退出，可以关闭此页面。');
+        for (const button of document.querySelectorAll('button')) button.disabled = true;
+    } catch (error) { quitting = false; report(error); }
+}
+document.addEventListener('keydown', event => {
+    if (event.key === 'F12') { event.preventDefault(); event.stopImmediatePropagation(); void quitProgram(); }
+}, true);
 const theme = localStorage.getItem('uooc-theme') || 'system';
 $('theme').value = ['system', 'light', 'dark'].includes(theme) ? theme : 'system';
 document.documentElement.dataset.theme = $('theme').value;
@@ -327,9 +359,6 @@ $('download-log').addEventListener('click', () => {
     const link = document.createElement('a'); link.href = url; link.download = 'UOOC-Study-运行记录.txt'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
 let stopped = false;
-$('shutdown').addEventListener('click', async () => {
-    try { await api('shutdown', {}); stopped = true; notice('程序已退出，可以关闭此页面。'); for (const button of document.querySelectorAll('button')) button.disabled = true; }
-    catch (error) { notice(error.message, true); }
-});
+$('shutdown').addEventListener('click', () => { void quitProgram(); });
 async function poll() { if (stopped) return; await refresh(); if (!stopped) setTimeout(poll, 1000); }
 poll();

@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing version tag, for example v0.4.18'
+        description: 'Existing version tag, for example v0.4.21'
         required: true
         type: string
 
@@ -79,6 +79,7 @@ jobs:
             npm run build:windows
           }
       - run: node tools/check-launcher.js
+      - run: node tools/test-launchers.js
       - name: Prepare notes and checksums
         shell: pwsh
         run: |

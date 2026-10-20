@@ -38,7 +38,7 @@ foreach ($kind in @('windows-x64', 'complete-windows-x64', 'source')) {
             try { $packagedVersion = ($reader.ReadToEnd() | ConvertFrom-Json).version }
             finally { $reader.Dispose() }
             if ($packagedVersion -ne $version) { throw "Stale source version in $kind package." }
-            foreach ($name in @('app.js', 'lib/video-prompt.js', 'lib/window-rendering.js', 'start.bat', 'start.vbs')) {
+            foreach ($name in @('app.js', 'lib/video-prompt.js', 'lib/window-rendering.js', 'lib/gui.js', 'lib/gui-open.js', 'lib/gui-instance.js', 'lib/gui-lifecycle.js', 'lib/worker.js', 'start.bat', 'start.vbs')) {
                 $entry = $zip.GetEntry($name)
                 if (-not $entry -or (Entry-Hash $entry) -ne (File-Hash (Join-Path $projectDirectory $name))) {
                     throw "Stale or missing $name in $kind package."
